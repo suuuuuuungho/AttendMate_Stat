@@ -1,6 +1,6 @@
 /* AttendMate_Stat — 통계 페이지 전용 컴포넌트 */
 
-/* 타임 선택 드롭다운 — AttendMate 좌석판과 동일한 모양(재사용 가능하도록 그대로 복제) */
+/* 타임 선택 드롭다운 — AttendMate 좌석판과 동일한 모양 */
 .time-tabs {
   display: flex;
   align-items: center;
@@ -21,48 +21,76 @@
   text-align-last: center;
   appearance: none;
   -webkit-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--color-ink) 50%), linear-gradient(135deg, var(--color-ink) 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-primary) 50%), linear-gradient(135deg, var(--color-primary) 50%, transparent 50%);
   background-position: calc(100% - 14px) center, calc(100% - 10px) center;
   background-size: 4px 4px, 4px 4px;
   background-repeat: no-repeat;
 }
 .time-select:focus { outline: 2px solid var(--color-primary-focus); outline-offset: 2px; }
 
+/* 서브내비 — 인디고 톤 프로스트로 살짝 브랜드 컬러를 얹는다 */
+.sub-nav-frosted {
+  background: linear-gradient(rgba(238, 238, 255, 0.92), rgba(245, 245, 247, 0.86));
+}
+
 /* ===================== 레이아웃 ===================== */
 
 .stats-page {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) var(--space-xxl);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-xxl);
 }
 
-/* ===================== 전체 출석 히어로 카드 ===================== */
+/* ===================== 전체 출석 히어로 ===================== */
 
 .stat-hero {
+  position: relative;
+  overflow: hidden;
   text-align: center;
-  padding: var(--space-xl) var(--space-lg);
-  background: var(--color-accent-2-soft);
+  padding: var(--space-xxl) var(--space-lg) var(--space-xl);
   border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+  box-shadow: 0 16px 40px -16px rgba(88, 86, 214, 0.55);
+}
+.stat-hero__time {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: var(--space-md);
 }
 .stat-hero__value {
   font-family: var(--font-display);
-  font-size: 56px;
-  font-weight: 600;
+  font-size: 68px;
+  font-weight: 700;
   line-height: 1;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.stat-hero__value span {
   color: var(--color-accent-2);
 }
 .stat-hero__label {
-  margin-top: var(--space-xs);
-  color: var(--color-ink-muted-48);
+  margin-top: var(--space-sm);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 /* ===================== 섹션 공통 ===================== */
 
+.stat-section__eyebrow {
+  display: block;
+  color: var(--color-primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
 .stat-section__title {
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 var(--space-md);
 }
 .stats-empty {
   padding: var(--space-lg);
@@ -76,86 +104,119 @@
 
 .grade-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-sm);
+}
+@media (min-width: 520px) {
+  .grade-card-grid { grid-template-columns: repeat(3, 1fr); }
 }
 .grade-card {
   display: block;
   width: 100%;
   text-align: left;
-  border: 1px solid var(--color-hairline);
-  border-left: 4px solid var(--grade-color, var(--color-primary));
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-canvas);
-  transition: background var(--transition-fast);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  background: var(--grade-tint, var(--color-canvas-parchment));
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
-.grade-card:hover { background: var(--color-canvas-parchment); }
-.grade-card[aria-expanded="true"] { background: var(--color-canvas-parchment); }
+.grade-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28); }
+.grade-card:active { transform: var(--press-scale); }
+.grade-card[aria-expanded="true"] { box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28); }
+.grade-card__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--grade-color, var(--color-primary));
+  margin-bottom: var(--space-xs);
+}
 .grade-card__label {
   display: block;
   font-weight: 600;
+  color: var(--color-ink);
 }
 .grade-card__count {
   display: block;
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--color-accent-2);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--grade-color, var(--color-primary));
   margin-top: 2px;
 }
 .grade-card__roster {
   grid-column: 1 / -1;
+  background: var(--color-canvas);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
+  padding: var(--space-xs) var(--space-sm);
   margin-top: calc(-1 * var(--space-xxs));
 }
 
 /* ===================== 반별 목록 ===================== */
 
 .class-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  background: var(--color-canvas);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 20px -14px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
+.class-group + .class-group { border-top: 1px solid var(--color-divider-soft); }
 .class-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-sm);
   width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-md);
+  padding: var(--space-md);
   background: var(--color-canvas);
   transition: background var(--transition-fast);
 }
 .class-row:hover { background: var(--color-canvas-parchment); }
-.class-row[aria-expanded="true"] { background: var(--color-canvas-parchment); border-color: var(--color-accent-2); }
+.class-row[aria-expanded="true"] { background: var(--color-primary-soft); }
+.class-row__dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--grade-color, var(--color-primary));
+}
+.class-row__label {
+  flex: 1;
+  text-align: left;
+}
 .class-row__count {
   color: var(--color-accent-2);
-  font-weight: 600;
+  font-weight: 700;
+  font-family: var(--font-display);
 }
 .class-row__chevron {
-  margin-left: var(--space-sm);
+  display: inline-flex;
   color: var(--color-ink-muted-48);
   transition: transform var(--transition-fast);
 }
-.class-row[aria-expanded="true"] .class-row__chevron { transform: rotate(90deg); }
+.class-row[aria-expanded="true"] .class-row__chevron { transform: rotate(90deg); color: var(--color-primary); }
 
 /* ===================== 명단(roster) 리스트 — 학년 카드/반 행 공통 ===================== */
 
+@keyframes roster-reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .roster-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: var(--space-xs) 0 0;
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  animation: roster-reveal 160ms ease;
 }
 .roster-item {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: var(--space-xxs) var(--space-sm);
-  border-radius: var(--radius-sm);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-divider-soft);
 }
-.roster-item:nth-child(odd) { background: var(--color-canvas-parchment); }
+.roster-item:last-child { border-bottom: none; }
 .roster-item__class {
   color: var(--color-ink-muted-48);
 }

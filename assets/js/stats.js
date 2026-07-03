@@ -6,11 +6,15 @@ import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js";
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 const refreshBtn = document.getElementById("refreshBtn");
+const heroTimeEl = document.getElementById("heroTime");
 const totalCountEl = document.getElementById("totalCount");
 const gradeCardsEl = document.getElementById("gradeCards");
 const gradeEmptyEl = document.getElementById("gradeEmpty");
 const classListEl = document.getElementById("classList");
 const classEmptyEl = document.getElementById("classEmpty");
+
+const CHEVRON_SVG =
+  '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 let currentTime = TIMES[0];
 // 카드/행을 펼쳐둔 상태는 15초 폴링마다 다시 렌더링해도 유지되도록 key 집합으로 따로 관리한다.
@@ -57,7 +61,7 @@ function renderRosterList(members) {
 
 function renderGradeCards(byGrade) {
   gradeCardsEl.innerHTML = "";
-  const groups = [...GRADE_GROUPS, { key: "other", label: "기타", cssVar: null }];
+  const groups = [...GRADE_GROUPS, { key: "other", label: "기타", cssVar: null, tintVar: null }];
   let anyRendered = false;
 
   for (const group of groups) {
@@ -70,14 +74,17 @@ function renderGradeCards(byGrade) {
     card.className = "grade-card";
     card.setAttribute("aria-expanded", String(expandedGrades.has(group.key)));
     if (group.cssVar) card.style.setProperty("--grade-color", `var(${group.cssVar})`);
+    if (group.tintVar) card.style.setProperty("--grade-tint", `var(${group.tintVar})`);
 
+    const dot = document.createElement("span");
+    dot.className = "grade-card__dot";
     const label = document.createElement("span");
-    label.className = "grade-card__label text-caption-strong on-light";
+    label.className = "grade-card__label text-caption-strong";
     label.textContent = group.label;
     const count = document.createElement("span");
     count.className = "grade-card__count";
     count.textContent = bucket.members.length + "명";
-    card.append(label, count);
+    card.append(dot, label, count);
 
     card.addEventListener("click", () => {
       if (expandedGrades.has(group.key)) expandedGrades.delete(group.key);
@@ -103,29 +110,32 @@ function renderClassList(byClass) {
 
   for (const classKey of classKeys) {
     const bucket = byClass[classKey];
+    const group = GRADE_GROUPS.find((g) => g.key === bucket.gradeKey);
     const wrap = document.createElement("div");
+    wrap.className = "class-group";
+    if (group) wrap.style.setProperty("--grade-color", `var(${group.cssVar})`);
 
     const row = document.createElement("button");
     row.type = "button";
     row.className = "class-row";
     row.setAttribute("aria-expanded", String(expandedClasses.has(classKey)));
 
+    const dot = document.createElement("span");
+    dot.className = "class-row__dot";
+
     const label = document.createElement("span");
-    label.className = "text-body on-light";
+    label.className = "class-row__label text-body on-light";
     label.textContent = classKey;
 
-    const right = document.createElement("span");
-    right.style.display = "flex";
-    right.style.alignItems = "center";
     const count = document.createElement("span");
     count.className = "class-row__count";
     count.textContent = bucket.members.length + "명";
+
     const chevron = document.createElement("span");
     chevron.className = "class-row__chevron";
-    chevron.textContent = "▸";
-    right.append(count, chevron);
+    chevron.innerHTML = CHEVRON_SVG;
 
-    row.append(label, right);
+    row.append(dot, label, count, chevron);
     row.addEventListener("click", () => {
       if (expandedClasses.has(classKey)) expandedClasses.delete(classKey);
       else expandedClasses.add(classKey);
@@ -153,7 +163,8 @@ function computeStats(seats) {
     (byGrade[gradeKey] || (byGrade[gradeKey] = { members: [] })).members.push(m);
 
     const classKey = abbreviateClass(m.학년반) || "미분류";
-    (byClass[classKey] || (byClass[classKey] = { members: [] })).members.push(m);
+    const classBucket = byClass[classKey] || (byClass[classKey] = { members: [], gradeKey });
+    classBucket.members.push(m);
   }
 
   return { total: members.length, byGrade, byClass };
@@ -164,7 +175,8 @@ async function loadStats() {
   const seats = res.seats || {};
   const { total, byGrade, byClass } = computeStats(seats);
 
-  totalCountEl.textContent = total + "명";
+  heroTimeEl.textContent = currentTime;
+  totalCountEl.innerHTML = `<span>${total}</span>명`;
   renderGradeCards(byGrade);
   renderClassList(byClass);
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";

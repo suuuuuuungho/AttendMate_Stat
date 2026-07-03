@@ -5,15 +5,18 @@
 */
 
 :root {
-  /* ===== Color / Brand & Accent ===== */
-  --color-primary: #0066cc;          /* Action Blue — 클릭 가능한 인터랙티브 요소의 액센트 */
-  --color-primary-focus: #0071e3;    /* 포커스 링 전용 */
-  --color-primary-on-dark: #2997ff;  /* 다크 타일 위의 인라인 링크 */
+  /* ===== Color / Brand & Accent =====
+     AttendMate_Stat만의 시그니처 컬러. Apple system indigo를 메인으로, system amber를
+     두 번째 포인트로 둬서 "히어로(인디고 그라디언트) 위의 앰버 숫자" 하나의 초점을 만든다. */
+  --color-primary: #5856d6;          /* Apple system indigo — 히어로/포커스링/인터랙션 */
+  --color-primary-2: #8b7bf0;        /* 히어로 그라디언트 끝단 */
+  --color-primary-focus: #5856d6;    /* 포커스 링 전용 */
+  --color-primary-on-dark: #9d9bff;  /* 다크 타일 위의 인라인 링크 */
+  --color-primary-soft: #eeeeff;     /* 인디고 톤 배경 틴트(서브내비 등) */
 
-  /* AttendMate_Stat 전용 두 번째 포인트 컬러 — 통계 숫자/강조 표시 전용(클릭 신호 아님).
-     Apple system teal 계열로, 좌석 배치 앱의 학년색(파스텔)이나 primary blue와 겹치지 않게 골랐다. */
-  --color-accent-2: #1ba1a8;
-  --color-accent-2-soft: #e3f5f5;
+  /* 두 번째 포인트 컬러 — 강조 숫자/뱃지 전용(클릭 신호 아님). Apple system amber. */
+  --color-accent-2: #ff9500;
+  --color-accent-2-soft: #fff2e0;
 
   /* ===== Color / Surface ===== */
   --color-canvas: #ffffff;
@@ -162,11 +165,19 @@
   --container-max: 1440px;
   --container-copy-max: 980px;
 
-  /* ===== Grade colors (AttendMate 좌석판과 동일한 학년/부서 구분색 — 명단 뱃지에 재사용) ===== */
-  --color-grade-1: #ffc49b;
-  --color-grade-2: #a8e6b0;
-  --color-grade-3: #d6bbf5;
-  --color-grade-new: #ffec99;
-  --color-grade-longterm: #b8c4d1;
+  /* ===== Grade colors =====
+     학년/부서별 카드·뱃지 전용 색. 예전엔 흐릿한 파스텔(#ffc49b 등)이라 밋밋했는데,
+     채도를 올린 색(숫자/점 용) + 그 색의 옅은 틴트(카드 배경 용) 한 쌍으로 바꿔서
+     카드 하나하나가 그 색 하나로 통일감 있게 보이도록 했다. */
+  --color-grade-1: #4c6ef5;
+  --color-grade-1-tint: #eef1ff;
+  --color-grade-2: #12b886;
+  --color-grade-2-tint: #e6fbf3;
+  --color-grade-3: #9c6ade;
+  --color-grade-3-tint: #f5eefc;
+  --color-grade-new: #f0568a;
+  --color-grade-new-tint: #fdeef3;
+  --color-grade-longterm: #5c6470;
+  --color-grade-longterm-tint: #eef0f2;
   --color-grade-text: var(--color-ink);
 }

@@ -3,11 +3,11 @@
 // 이 로직도 항상 같은 값으로 맞춰야 한다.
 
 export const GRADE_GROUPS = [
-  { key: "grade1", label: "1학년", match: /1학년/, cssVar: "--color-grade-1" },
-  { key: "grade2", label: "2학년", match: /2학년/, cssVar: "--color-grade-2" },
-  { key: "grade3", label: "3학년", match: /3학년/, cssVar: "--color-grade-3" },
-  { key: "new", label: "신입반", match: /신입/, cssVar: "--color-grade-new" },
-  { key: "longterm", label: "장기섬김", match: /장기섬김/, cssVar: "--color-grade-longterm" },
+  { key: "grade1", label: "1학년", match: /1학년/, cssVar: "--color-grade-1", tintVar: "--color-grade-1-tint" },
+  { key: "grade2", label: "2학년", match: /2학년/, cssVar: "--color-grade-2", tintVar: "--color-grade-2-tint" },
+  { key: "grade3", label: "3학년", match: /3학년/, cssVar: "--color-grade-3", tintVar: "--color-grade-3-tint" },
+  { key: "new", label: "신입반", match: /신입/, cssVar: "--color-grade-new", tintVar: "--color-grade-new-tint" },
+  { key: "longterm", label: "장기섬김", match: /장기섬김/, cssVar: "--color-grade-longterm", tintVar: "--color-grade-longterm-tint" },
 ];
 
 export function getGradeGroup(cls) {

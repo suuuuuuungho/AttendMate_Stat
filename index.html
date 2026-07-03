@@ -29,17 +29,20 @@
 
 <main class="stats-page">
   <section class="stat-hero">
-    <div id="totalCount" class="stat-hero__value">0명</div>
-    <div class="stat-hero__label text-caption">선택한 타임 전체 출석 인원</div>
+    <span id="heroTime" class="stat-hero__time text-caption-strong"></span>
+    <div id="totalCount" class="stat-hero__value"><span>0</span>명</div>
+    <div class="stat-hero__label text-caption">전체 출석 인원</div>
   </section>
 
   <section class="stat-section">
+    <span class="stat-section__eyebrow text-caption-strong">GRADE</span>
     <h2 class="stat-section__title text-body-strong on-light">학년별 출석</h2>
     <div id="gradeCards" class="grade-card-grid"></div>
     <div id="gradeEmpty" class="stats-empty text-caption" style="display:none;">아직 출석한 인원이 없습니다.</div>
   </section>
 
   <section class="stat-section">
+    <span class="stat-section__eyebrow text-caption-strong">CLASS</span>
     <h2 class="stat-section__title text-body-strong on-light">반별 출석</h2>
     <div id="classList" class="class-list"></div>
     <div id="classEmpty" class="stats-empty text-caption" style="display:none;">아직 출석한 인원이 없습니다.</div>
