@@ -1,0 +1,161 @@
+/* AttendMate_Stat — 통계 페이지 전용 컴포넌트 */
+
+/* 타임 선택 드롭다운 — AttendMate 좌석판과 동일한 모양(재사용 가능하도록 그대로 복제) */
+.time-tabs {
+  display: flex;
+  align-items: center;
+}
+.time-select {
+  box-sizing: border-box;
+  height: 32px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-text);
+  font-size: var(--type-caption-size);
+  line-height: 1;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  padding: 0 26px 0 14px;
+  min-width: 92px;
+  text-align: center;
+  text-align-last: center;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-ink) 50%), linear-gradient(135deg, var(--color-ink) 50%, transparent 50%);
+  background-position: calc(100% - 14px) center, calc(100% - 10px) center;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+.time-select:focus { outline: 2px solid var(--color-primary-focus); outline-offset: 2px; }
+
+/* ===================== 레이아웃 ===================== */
+
+.stats-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* ===================== 전체 출석 히어로 카드 ===================== */
+
+.stat-hero {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-accent-2-soft);
+  border-radius: var(--radius-lg);
+}
+.stat-hero__value {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-accent-2);
+}
+.stat-hero__label {
+  margin-top: var(--space-xs);
+  color: var(--color-ink-muted-48);
+}
+
+/* ===================== 섹션 공통 ===================== */
+
+.stat-section__title {
+  margin: 0 0 var(--space-sm);
+}
+.stats-empty {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--color-ink-muted-48);
+  border: 1px dashed var(--color-hairline);
+  border-radius: var(--radius-md);
+}
+
+/* ===================== 학년별 카드 ===================== */
+
+.grade-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-sm);
+}
+.grade-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-hairline);
+  border-left: 4px solid var(--grade-color, var(--color-primary));
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-canvas);
+  transition: background var(--transition-fast);
+}
+.grade-card:hover { background: var(--color-canvas-parchment); }
+.grade-card[aria-expanded="true"] { background: var(--color-canvas-parchment); }
+.grade-card__label {
+  display: block;
+  font-weight: 600;
+}
+.grade-card__count {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-accent-2);
+  margin-top: 2px;
+}
+.grade-card__roster {
+  grid-column: 1 / -1;
+  margin-top: calc(-1 * var(--space-xxs));
+}
+
+/* ===================== 반별 목록 ===================== */
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.class-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
+  transition: background var(--transition-fast);
+}
+.class-row:hover { background: var(--color-canvas-parchment); }
+.class-row[aria-expanded="true"] { background: var(--color-canvas-parchment); border-color: var(--color-accent-2); }
+.class-row__count {
+  color: var(--color-accent-2);
+  font-weight: 600;
+}
+.class-row__chevron {
+  margin-left: var(--space-sm);
+  color: var(--color-ink-muted-48);
+  transition: transform var(--transition-fast);
+}
+.class-row[aria-expanded="true"] .class-row__chevron { transform: rotate(90deg); }
+
+/* ===================== 명단(roster) 리스트 — 학년 카드/반 행 공통 ===================== */
+
+.roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-xs) 0 0;
+}
+.roster-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-xxs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.roster-item:nth-child(odd) { background: var(--color-canvas-parchment); }
+.roster-item__class {
+  color: var(--color-ink-muted-48);
+}

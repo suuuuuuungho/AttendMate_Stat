@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>출석 통계 — AttendMate_Stat</title>
+<meta name="description" content="AttendMate_Stat 타임/학년/반별 출석 통계">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/stats.css">
+</head>
+<body>
+
+<nav class="global-nav">
+  <span class="text-nav-link" style="font-weight:600;">AttendMate_Stat</span>
+  <div class="global-nav__actions">
+    <span id="lastUpdated" class="text-caption" style="opacity:0.85;"></span>
+    <button id="refreshBtn" class="btn-dark-utility">새로고침</button>
+  </div>
+</nav>
+
+<div class="sub-nav-frosted">
+  <span class="sub-nav-frosted__title">출석 통계</span>
+  <div class="sub-nav-frosted__links">
+    <div id="timeTabs" class="time-tabs"></div>
+  </div>
+</div>
+
+<main class="stats-page">
+  <section class="stat-hero">
+    <div id="totalCount" class="stat-hero__value">0명</div>
+    <div class="stat-hero__label text-caption">선택한 타임 전체 출석 인원</div>
+  </section>
+
+  <section class="stat-section">
+    <h2 class="stat-section__title text-body-strong on-light">학년별 출석</h2>
+    <div id="gradeCards" class="grade-card-grid"></div>
+    <div id="gradeEmpty" class="stats-empty text-caption" style="display:none;">아직 출석한 인원이 없습니다.</div>
+  </section>
+
+  <section class="stat-section">
+    <h2 class="stat-section__title text-body-strong on-light">반별 출석</h2>
+    <div id="classList" class="class-list"></div>
+    <div id="classEmpty" class="stats-empty text-caption" style="display:none;">아직 출석한 인원이 없습니다.</div>
+  </section>
+</main>
+
+<script type="module" src="assets/js/stats.js"></script>
+</body>
+</html>
