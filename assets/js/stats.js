@@ -1,7 +1,7 @@
-import { TIMES } from "./config.js?v=20260704c";
-import { apiGet, subscribeToSeatChanges } from "./api.js?v=20260704c";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704c";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704c";
+import { TIMES } from "./config.js?v=20260704d";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704d";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704d";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704d";
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
@@ -50,7 +50,56 @@ function formatUpdatedTime(date) {
   return `${ampm} ${hours12}:${minutes}`;
 }
 
-function renderRosterGroup(title, members) {
+let activeToastEl = null;
+function showToast(text) {
+  if (activeToastEl) activeToastEl.remove();
+  const el = document.createElement("div");
+  el.className = "toast toast--processing";
+  el.textContent = text;
+  document.body.appendChild(el);
+  activeToastEl = el;
+  return {
+    complete(msg) {
+      el.className = "toast toast--success";
+      el.textContent = msg;
+      setTimeout(() => {
+        if (activeToastEl === el) activeToastEl = null;
+        el.remove();
+      }, 1800);
+    },
+    fail(msg) {
+      el.className = "toast toast--error";
+      el.textContent = msg;
+      setTimeout(() => {
+        if (activeToastEl === el) activeToastEl = null;
+        el.remove();
+      }, 2500);
+    },
+  };
+}
+
+/**
+ * "출석 수정" 버튼 전용. 실제 좌석은 고를 수 없는 화면이라 markAttendance는 자리
+ * 표식 없이 기록만 남기고, AttendMate 좌석판에는 "자리 미배정" 블록으로 모인다.
+ */
+async function toggleAttendance(member, attended) {
+  const toast = showToast(attended ? "출석 취소 처리 중입니다..." : "출석 처리 중입니다...");
+  try {
+    const res = attended
+      ? await apiPost("cancelAttendance", { 회원ID: member.회원ID, 타임: currentTime })
+      : await apiPost("markAttendance", { 회원ID: member.회원ID, 이름: member.이름, 학년반: member.학년반, 타임: currentTime });
+    if (res.success) {
+      toast.complete(attended ? `${member.이름}님 출석을 취소했습니다` : `${member.이름}님 출석 처리했습니다`);
+      loadStats();
+    } else {
+      toast.fail(res.error || "처리에 실패했습니다.");
+    }
+  } catch (e) {
+    toast.fail("네트워크 오류로 처리에 실패했습니다.");
+  }
+}
+
+function renderRosterGroup(title, members, attended) {
   const wrap = document.createElement("div");
   wrap.className = "roster-group";
 
@@ -67,6 +116,7 @@ function renderRosterGroup(title, members) {
     return wrap;
   }
 
+  const showActions = currentTime !== ALL_SUMMARY;
   const sorted = [...members].sort((a, b) => (a.이름 || "").localeCompare(b.이름 || "", "ko"));
   const list = document.createElement("div");
   list.className = "roster-list";
@@ -77,6 +127,35 @@ function renderRosterGroup(title, members) {
     name.className = "roster-item__name text-body";
     name.textContent = m.이름 || "";
     item.appendChild(name);
+
+    if (showActions) {
+      const actions = document.createElement("div");
+      actions.className = "roster-item__actions";
+
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "roster-action-btn";
+      toggleBtn.textContent = attended ? "출석 취소" : "출석 처리";
+      toggleBtn.addEventListener("click", () => toggleAttendance(m, attended));
+      actions.appendChild(toggleBtn);
+
+      if (m.전화) {
+        const callLink = document.createElement("a");
+        callLink.className = "roster-action-btn roster-action-btn--link";
+        callLink.href = `tel:${m.전화}`;
+        callLink.textContent = "전화";
+        actions.appendChild(callLink);
+
+        const smsLink = document.createElement("a");
+        smsLink.className = "roster-action-btn roster-action-btn--link";
+        smsLink.href = `sms:${m.전화}`;
+        smsLink.textContent = "문자";
+        actions.appendChild(smsLink);
+      }
+
+      item.appendChild(actions);
+    }
+
     list.appendChild(item);
   }
   wrap.appendChild(list);
@@ -188,8 +267,8 @@ function renderTree(tree) {
         if (expandedClasses.has(classKeyFull)) {
           const rosterPanel = document.createElement("div");
           rosterPanel.className = "roster-panel";
-          rosterPanel.appendChild(renderRosterGroup("출석학생", cls.attended));
-          rosterPanel.appendChild(renderRosterGroup("미출석학생", cls.absent));
+          rosterPanel.appendChild(renderRosterGroup("출석학생", cls.attended, true));
+          rosterPanel.appendChild(renderRosterGroup("미출석학생", cls.absent, false));
           classWrap.appendChild(rosterPanel);
         }
 

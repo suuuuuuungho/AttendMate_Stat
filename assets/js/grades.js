@@ -10,6 +10,7 @@ export const GRADE_GROUPS = [
   { key: "grade3", label: "3학년", match: /3학년|^3-\d/, cssVar: "--color-grade-3" },
   { key: "new", label: "신입반", match: /신입/, cssVar: "--color-grade-new" },
   { key: "longterm", label: "장기섬김", match: /장기섬김/, cssVar: "--color-grade-longterm" },
+  { key: "teacher", label: "교사", match: /교사/, cssVar: "--color-grade-teacher" },
 ];
 
 export function getGradeGroup(cls) {

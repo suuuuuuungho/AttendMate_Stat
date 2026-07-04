@@ -57,6 +57,7 @@ ALL_CLASSES.forEach((cls, ci) => {
       회원ID: `MOCK-${ci}-${i}`,
       이름: `학생${ci}${i}`,
       학년반: cls,
+      전화: "01025895573",
     });
   }
 });
@@ -69,4 +70,17 @@ export function mockGetAllMembers() {
 export function mockGetAllAttendance() {
   const members = MOCK_ALL_MEMBERS.filter((_, i) => i % 5 !== 0);
   return { members };
+}
+
+// "출석 수정" 버튼 미리보기용 — 실제 Supabase 없이도 동작을 확인할 수 있게 메모리에만 반영한다.
+const mockManualAttendance = new Set(); // `${회원ID}::${타임}`
+
+export function mockMarkAttendance({ 회원ID, 타임 }) {
+  mockManualAttendance.add(`${회원ID}::${타임}`);
+  return { success: true };
+}
+
+export function mockCancelAttendance({ 회원ID, 타임 }) {
+  mockManualAttendance.delete(`${회원ID}::${타임}`);
+  return { success: true };
 }
