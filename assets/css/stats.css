@@ -1,5 +1,28 @@
 /* AttendMate_Stat — 통계 페이지 전용 컴포넌트 */
 
+/* 출석 처리/취소 확인 팝업 — AttendMate 좌석판의 모달과 동일한 모양(화면 중앙 고정
+   오버레이). 이 규칙이 없으면 modal-overlay가 그냥 페이지 맨 아래로 흘러내려간다. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--space-lg);
+}
+.modal-panel {
+  background: var(--color-canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 /* 타임 선택 드롭다운 — AttendMate 좌석판과 동일한 모양 */
 .time-tabs {
   display: flex;
