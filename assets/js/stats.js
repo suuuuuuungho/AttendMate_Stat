@@ -1,5 +1,5 @@
 import { TIMES } from "./config.js";
-import { apiGet } from "./api.js";
+import { apiGet, subscribeToSeatChanges } from "./api.js";
 import { renderTimeTabs } from "./time-tabs.js";
 import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js";
 
@@ -187,3 +187,5 @@ refreshBtn.addEventListener("click", loadStats);
 refreshTabs();
 loadStats();
 setInterval(loadStats, 15000);
+// 좌석 체크 페이지와 동일하게, Log 테이블 변경을 폴링 없이 즉시 반영 (15초 폴링은 안전망으로 유지).
+subscribeToSeatChanges(() => loadStats());
