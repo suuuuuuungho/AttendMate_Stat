@@ -87,16 +87,21 @@
   color: rgba(255, 255, 255, 0.92);
   margin-bottom: var(--space-md);
 }
-.stat-hero__value {
+.stat-hero__split {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xxl);
+}
+.stat-hero__split-value {
   font-family: var(--font-display);
-  font-size: 68px;
+  font-size: 48px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
   color: #ffffff;
 }
-.stat-hero__label {
-  margin-top: var(--space-sm);
+.stat-hero__split-label {
+  margin-top: var(--space-xs);
   color: rgba(255, 255, 255, 0.72);
 }
 

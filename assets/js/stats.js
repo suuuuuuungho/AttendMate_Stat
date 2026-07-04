@@ -1,13 +1,17 @@
-import { TIMES } from "./config.js?v=20260704g";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704g";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704g";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704g";
+import { TIMES } from "./config.js?v=20260704h";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704h";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704h";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704h";
+import { initAppSwitcher } from "./app-switcher.js?v=20260704h";
+
+initAppSwitcher();
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 const refreshBtn = document.getElementById("refreshBtn");
 const heroTimeEl = document.getElementById("heroTime");
-const totalCountEl = document.getElementById("totalCount");
+const studentCountEl = document.getElementById("studentCount");
+const teacherCountEl = document.getElementById("teacherCount");
 const statTreeEl = document.getElementById("statTree");
 const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 
@@ -359,8 +363,13 @@ async function loadStats() {
   const attendedIds = new Set(attendedMembers.map((m) => m.회원ID));
   const tree = buildTree(allMembers, attendedIds);
 
+  // 전체 인원 대신 학생/교사를 나눠 보여준다 — 섞인 숫자만으론 구성을 알 수 없어서.
+  const teacherCount = tree.find((g) => g.key === "teacher")?.totalAttended || 0;
+  const studentCount = attendedIds.size - teacherCount;
+
   heroTimeEl.textContent = currentTime === ALL_SUMMARY ? "전체 요약" : currentTime;
-  totalCountEl.innerHTML = `<span>${attendedIds.size}</span>명`;
+  studentCountEl.textContent = `${studentCount}명`;
+  teacherCountEl.textContent = `${teacherCount}명`;
   renderTree(tree);
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";
 }

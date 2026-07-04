@@ -66,6 +66,52 @@
   padding: 0 var(--space-lg);
 }
 
+/* 좌측 상단 앱 이름 — 눌러서 AttendMate ↔ AttendMate_Stat을 오갈 수 있는 드롭다운. */
+.app-switcher {
+  position: relative;
+}
+.app-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-on-dark);
+  cursor: pointer;
+}
+.app-switcher__chevron {
+  color: var(--color-on-dark);
+  flex-shrink: 0;
+}
+.app-switcher__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 210;
+  min-width: 160px;
+  background: var(--color-canvas);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.35);
+  padding: var(--space-xxs);
+  flex-direction: column;
+  gap: 2px;
+}
+.app-switcher__item {
+  display: block;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-text);
+  font-size: var(--type-caption-size);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+a.app-switcher__item:hover { background: var(--color-canvas-parchment); }
+.app-switcher__item--current {
+  color: var(--color-ink-muted-48);
+  cursor: default;
+}
+
 .sub-nav-frosted {
   position: sticky;
   top: 44px;

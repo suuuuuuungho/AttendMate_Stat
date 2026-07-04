@@ -5,15 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>출석 통계 — AttendMate_Stat</title>
 <meta name="description" content="AttendMate_Stat 타임/학년/반별 출석 통계">
-<link rel="stylesheet" href="assets/css/tokens.css?v=20260704g">
-<link rel="stylesheet" href="assets/css/base.css?v=20260704g">
-<link rel="stylesheet" href="assets/css/components.css?v=20260704g">
-<link rel="stylesheet" href="assets/css/stats.css?v=20260704g">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20260704h">
+<link rel="stylesheet" href="assets/css/base.css?v=20260704h">
+<link rel="stylesheet" href="assets/css/components.css?v=20260704h">
+<link rel="stylesheet" href="assets/css/stats.css?v=20260704h">
 </head>
 <body>
 
 <nav class="global-nav">
-  <span class="text-nav-link" style="font-weight:600;">AttendMate_Stat</span>
+  <div class="app-switcher">
+    <button id="appSwitcherBtn" type="button" class="app-switcher__trigger">
+      <span class="text-nav-link" style="font-weight:600;">AttendMate_Stat</span>
+      <svg class="app-switcher__chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div id="appSwitcherMenu" class="app-switcher__menu" style="display:none;">
+      <span class="app-switcher__item app-switcher__item--current">출석 통계</span>
+      <a class="app-switcher__item" href="https://suuuuuuungho.github.io/AttendMate/">좌석 배치 현황</a>
+    </div>
+  </div>
   <div class="global-nav__actions">
     <span id="lastUpdated" class="text-caption" style="opacity:0.85;"></span>
     <button id="refreshBtn" class="btn-dark-utility">새로고침</button>
@@ -30,8 +41,16 @@
 <main class="stats-page">
   <section class="stat-hero">
     <span id="heroTime" class="stat-hero__time text-caption-strong"></span>
-    <div id="totalCount" class="stat-hero__value"><span>0</span>명</div>
-    <div class="stat-hero__label text-caption">전체 출석 인원</div>
+    <div class="stat-hero__split">
+      <div class="stat-hero__split-item">
+        <div id="studentCount" class="stat-hero__split-value">0명</div>
+        <div class="stat-hero__split-label text-caption">학생</div>
+      </div>
+      <div class="stat-hero__split-item">
+        <div id="teacherCount" class="stat-hero__split-value">0명</div>
+        <div class="stat-hero__split-label text-caption">교사</div>
+      </div>
+    </div>
   </section>
 
   <section class="stat-section">
@@ -51,6 +70,6 @@
   </div>
 </div>
 
-<script type="module" src="assets/js/stats.js?v=20260704g"></script>
+<script type="module" src="assets/js/stats.js?v=20260704h"></script>
 </body>
 </html>
