@@ -1,7 +1,7 @@
-import { TIMES } from "./config.js";
-import { apiGet, subscribeToSeatChanges } from "./api.js";
-import { renderTimeTabs } from "./time-tabs.js";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js";
+import { TIMES } from "./config.js?v=20260704b";
+import { apiGet, subscribeToSeatChanges } from "./api.js?v=20260704b";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704b";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704b";
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
