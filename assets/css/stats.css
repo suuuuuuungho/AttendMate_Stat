@@ -241,7 +241,35 @@
 }
 .roster-action-btn:active { transform: var(--press-scale); }
 .roster-action-btn:hover { background: var(--color-primary-soft); }
-.roster-action-btn--link { border-color: var(--color-hairline); color: var(--color-ink-muted-80); }
+
+/* 전화/문자는 텍스트 대신 Apple 스타일 필드 아이콘의 원형 버튼으로 — 이름 옆에서
+   덜 도드라지면서도 바로 알아볼 수 있게 한다. */
+.roster-action-btn--icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-color: var(--color-hairline);
+  color: var(--color-ink-muted-80);
+}
+
+/* ===================== 출석 처리/취소 확인 팝업 =====================
+   타임을 안 보고 누르는 실수를 막기 위해 이름/반/타임을 한 번 더 보여준다. */
+.attendance-confirm__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+}
+.attendance-confirm__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-divider-soft);
+}
+.attendance-confirm__row:last-child { border-bottom: none; }
+.attendance-confirm__label { color: var(--color-ink-muted-48); }
+.attendance-confirm__value { color: var(--color-ink); }
 
 /* 배정/취소 진행 상태 토스트 — AttendMate 좌석판과 동일한 모양. */
 .toast {

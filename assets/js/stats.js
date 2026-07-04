@@ -1,7 +1,7 @@
-import { TIMES } from "./config.js?v=20260704d";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704d";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704d";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704d";
+import { TIMES } from "./config.js?v=20260704e";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704e";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704e";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704e";
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
@@ -11,8 +11,20 @@ const totalCountEl = document.getElementById("totalCount");
 const statTreeEl = document.getElementById("statTree");
 const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 
+const attendanceConfirmModal = document.getElementById("attendanceConfirmModal");
+const attendanceConfirmTitle = document.getElementById("attendanceConfirmTitle");
+const attendanceConfirmBody = document.getElementById("attendanceConfirmBody");
+const attendanceConfirmCancelBtn = document.getElementById("attendanceConfirmCancelBtn");
+const attendanceConfirmOkBtn = document.getElementById("attendanceConfirmOkBtn");
+
 const CHEVRON_SVG =
   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// Apple 전화/메시지 아이콘과 같은 실루엣의 필드 아이콘 (SF Symbols 유사 스타일).
+const PHONE_ICON_SVG =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+const MESSAGE_ICON_SVG =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
 
 // "전체 요약"은 타임 구분 없이 한 번이라도 체크인한 학생을 출석으로 친다 (config.js의
 // 실제 타임 값과 절대 겹치지 않도록 특수 토큰을 쓴다).
@@ -79,9 +91,49 @@ function showToast(text) {
 }
 
 /**
- * "출석 수정" 버튼 전용. 실제 좌석은 고를 수 없는 화면이라 markAttendance는 자리
- * 표식 없이 기록만 남기고, AttendMate 좌석판에는 "자리 미배정" 블록으로 모인다.
+ * "출석 처리/취소"는 되돌리기 번거로운 작업이라, 타임을 안 보고 누르는 실수를
+ * 막기 위해 이름/반/타임을 보여주는 확인 팝업을 한 단계 거친다.
  */
+let pendingToggle = null;
+
+function openAttendanceConfirm(member, attended) {
+  pendingToggle = { member, attended };
+  attendanceConfirmTitle.textContent = attended ? "출석 취소" : "출석 처리";
+  attendanceConfirmBody.innerHTML = "";
+  const rows = [
+    ["이름", member.이름 || ""],
+    ["반", abbreviateClass(member.학년반) || member.학년반 || ""],
+    ["타임", currentTime],
+  ];
+  for (const [label, value] of rows) {
+    const row = document.createElement("div");
+    row.className = "attendance-confirm__row";
+    const labelEl = document.createElement("span");
+    labelEl.className = "attendance-confirm__label text-caption";
+    labelEl.textContent = label;
+    const valueEl = document.createElement("span");
+    valueEl.className = "attendance-confirm__value text-body-strong";
+    valueEl.textContent = value;
+    row.append(labelEl, valueEl);
+    attendanceConfirmBody.appendChild(row);
+  }
+  attendanceConfirmOkBtn.textContent = attended ? "출석 취소" : "출석 처리";
+  attendanceConfirmModal.style.display = "flex";
+}
+
+function closeAttendanceConfirm() {
+  attendanceConfirmModal.style.display = "none";
+  pendingToggle = null;
+}
+
+attendanceConfirmCancelBtn.addEventListener("click", closeAttendanceConfirm);
+attendanceConfirmOkBtn.addEventListener("click", () => {
+  if (!pendingToggle) return;
+  const { member, attended } = pendingToggle;
+  closeAttendanceConfirm();
+  toggleAttendance(member, attended);
+});
+
 async function toggleAttendance(member, attended) {
   const toast = showToast(attended ? "출석 취소 처리 중입니다..." : "출석 처리 중입니다...");
   try {
@@ -136,20 +188,24 @@ function renderRosterGroup(title, members, attended) {
       toggleBtn.type = "button";
       toggleBtn.className = "roster-action-btn";
       toggleBtn.textContent = attended ? "출석 취소" : "출석 처리";
-      toggleBtn.addEventListener("click", () => toggleAttendance(m, attended));
+      toggleBtn.addEventListener("click", () => openAttendanceConfirm(m, attended));
       actions.appendChild(toggleBtn);
 
       if (m.전화) {
         const callLink = document.createElement("a");
-        callLink.className = "roster-action-btn roster-action-btn--link";
+        callLink.className = "roster-action-btn roster-action-btn--icon";
         callLink.href = `tel:${m.전화}`;
-        callLink.textContent = "전화";
+        callLink.title = "전화";
+        callLink.setAttribute("aria-label", "전화");
+        callLink.innerHTML = PHONE_ICON_SVG;
         actions.appendChild(callLink);
 
         const smsLink = document.createElement("a");
-        smsLink.className = "roster-action-btn roster-action-btn--link";
+        smsLink.className = "roster-action-btn roster-action-btn--icon";
         smsLink.href = `sms:${m.전화}`;
-        smsLink.textContent = "문자";
+        smsLink.title = "문자";
+        smsLink.setAttribute("aria-label", "문자");
+        smsLink.innerHTML = MESSAGE_ICON_SVG;
         actions.appendChild(smsLink);
       }
 
