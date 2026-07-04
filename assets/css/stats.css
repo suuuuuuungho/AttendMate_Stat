@@ -294,6 +294,16 @@
 .attendance-confirm__label { color: var(--color-ink-muted-48); }
 .attendance-confirm__value { color: var(--color-ink); }
 
+.attendance-confirm__warning {
+  background: var(--color-accent-2-soft);
+  color: var(--color-accent-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  text-align: center;
+}
+/* 타임 행은 실수가 가장 잦은 항목이라 값 색을 강조색으로 눈에 띄게 한다. */
+.attendance-confirm__row--time .attendance-confirm__value { color: var(--color-accent-2); }
+
 /* 배정/취소 진행 상태 토스트 — AttendMate 좌석판과 동일한 모양. */
 .toast {
   position: fixed;

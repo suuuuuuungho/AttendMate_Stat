@@ -1,7 +1,7 @@
-import { TIMES } from "./config.js?v=20260704f";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704f";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704f";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704f";
+import { TIMES } from "./config.js?v=20260704g";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704g";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704g";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704g";
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
@@ -100,6 +100,12 @@ function openAttendanceConfirm(member, attended) {
   pendingToggle = { member, attended };
   attendanceConfirmTitle.textContent = attended ? "출석 취소" : "출석 처리";
   attendanceConfirmBody.innerHTML = "";
+
+  const warning = document.createElement("div");
+  warning.className = "attendance-confirm__warning text-caption-strong";
+  warning.textContent = "⚠️ 타임이 맞는지 꼭 확인해주세요";
+  attendanceConfirmBody.appendChild(warning);
+
   const rows = [
     ["이름", member.이름 || ""],
     ["반", abbreviateClass(member.학년반) || member.학년반 || ""],
@@ -108,6 +114,7 @@ function openAttendanceConfirm(member, attended) {
   for (const [label, value] of rows) {
     const row = document.createElement("div");
     row.className = "attendance-confirm__row";
+    if (label === "타임") row.classList.add("attendance-confirm__row--time");
     const labelEl = document.createElement("span");
     labelEl.className = "attendance-confirm__label text-caption";
     labelEl.textContent = label;
