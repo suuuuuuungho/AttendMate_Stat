@@ -39,3 +39,34 @@ TIMES.forEach((t, i) => {
 export function mockGetSeats(time) {
   return { seats: mockSeatLog[time] || {} };
 }
+
+// 학년/반 계층 구조(1학년 1-1~1-6반 등)를 미리보기에서도 확인할 수 있도록 넉넉한 전교생 명단을 만든다.
+const ALL_CLASSES = [
+  ...[1, 2, 3, 4, 5, 6].map((n) => `중등부 1학년 1-${n}반`),
+  ...[1, 2, 3, 4].map((n) => `중등부 2학년 2-${n}반`),
+  ...[1, 2].map((n) => `중등부 3학년 3-${n}반`),
+  "신입1반",
+  "장기섬김",
+];
+
+const MOCK_ALL_MEMBERS = [];
+ALL_CLASSES.forEach((cls, ci) => {
+  const perClass = 6 + (ci % 4);
+  for (let i = 1; i <= perClass; i++) {
+    MOCK_ALL_MEMBERS.push({
+      회원ID: `MOCK-${ci}-${i}`,
+      이름: `학생${ci}${i}`,
+      학년반: cls,
+    });
+  }
+});
+
+export function mockGetAllMembers() {
+  return { members: MOCK_ALL_MEMBERS };
+}
+
+// 전체 요약: 명단의 60%가량이 최소 한 타임 이상 출석한 것으로 가정한다.
+export function mockGetAllAttendance() {
+  const members = MOCK_ALL_MEMBERS.filter((_, i) => i % 5 !== 0);
+  return { members };
+}

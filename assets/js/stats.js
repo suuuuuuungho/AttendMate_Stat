@@ -1,28 +1,38 @@
-import { TIMES } from "./config.js?v=20260704b";
-import { apiGet, subscribeToSeatChanges } from "./api.js?v=20260704b";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704b";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704b";
+import { TIMES } from "./config.js?v=20260704c";
+import { apiGet, subscribeToSeatChanges } from "./api.js?v=20260704c";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704c";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704c";
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 const refreshBtn = document.getElementById("refreshBtn");
 const heroTimeEl = document.getElementById("heroTime");
 const totalCountEl = document.getElementById("totalCount");
-const gradeCardsEl = document.getElementById("gradeCards");
-const gradeEmptyEl = document.getElementById("gradeEmpty");
-const classListEl = document.getElementById("classList");
-const classEmptyEl = document.getElementById("classEmpty");
+const statTreeEl = document.getElementById("statTree");
+const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 
 const CHEVRON_SVG =
   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+// "전체 요약"은 타임 구분 없이 한 번이라도 체크인한 학생을 출석으로 친다 (config.js의
+// 실제 타임 값과 절대 겹치지 않도록 특수 토큰을 쓴다).
+const ALL_SUMMARY = "__ALL__";
+const timeOptions = [{ value: ALL_SUMMARY, label: "전체 요약" }, ...TIMES];
+
 let currentTime = TIMES[0];
+let allMembers = [];
 // 카드/행을 펼쳐둔 상태는 15초 폴링마다 다시 렌더링해도 유지되도록 key 집합으로 따로 관리한다.
 const expandedGrades = new Set();
-const expandedClasses = new Set();
+const expandedClasses = new Set(); // key: `${gradeKey}::${classKey}`
+
+async function loadAllMembers() {
+  const res = await apiGet("getAllMembers");
+  allMembers = res.members || [];
+}
+const membersReady = loadAllMembers();
 
 function refreshTabs() {
-  renderTimeTabs(timeTabsEl, TIMES, currentTime, (time) => {
+  renderTimeTabs(timeTabsEl, timeOptions, currentTime, (time) => {
     currentTime = time;
     expandedGrades.clear();
     expandedClasses.clear();
@@ -40,145 +50,176 @@ function formatUpdatedTime(date) {
   return `${ampm} ${hours12}:${minutes}`;
 }
 
-function renderRosterList(members) {
+function renderRosterGroup(title, members) {
+  const wrap = document.createElement("div");
+  wrap.className = "roster-group";
+
+  const heading = document.createElement("div");
+  heading.className = "roster-group__heading text-caption-strong";
+  heading.textContent = `${title} (${members.length}명)`;
+  wrap.appendChild(heading);
+
+  if (!members.length) {
+    const none = document.createElement("div");
+    none.className = "roster-group__none text-caption";
+    none.textContent = "없음";
+    wrap.appendChild(none);
+    return wrap;
+  }
+
+  const sorted = [...members].sort((a, b) => (a.이름 || "").localeCompare(b.이름 || "", "ko"));
   const list = document.createElement("div");
   list.className = "roster-list";
-  const sorted = [...members].sort((a, b) => (a.이름 || "").localeCompare(b.이름 || "", "ko"));
   for (const m of sorted) {
     const item = document.createElement("div");
     item.className = "roster-item";
     const name = document.createElement("span");
     name.className = "roster-item__name text-body";
     name.textContent = m.이름 || "";
-    const cls = document.createElement("span");
-    cls.className = "roster-item__class text-caption";
-    cls.textContent = abbreviateClass(m.학년반);
-    item.append(name, cls);
+    item.appendChild(name);
     list.appendChild(item);
   }
-  return list;
+  wrap.appendChild(list);
+  return wrap;
 }
 
-function renderGradeCards(byGrade) {
-  gradeCardsEl.innerHTML = "";
-  const groups = [...GRADE_GROUPS, { key: "other", label: "기타", cssVar: null, tintVar: null }];
-  let anyRendered = false;
+/**
+ * 전체 명단을 학년 → 반 단위로 묶고, 각 반은 출석/미출석 학생 목록을 함께 담는다.
+ * attendedIds에 없는 학생은 전부 미출석으로 간주한다.
+ */
+function buildTree(members, attendedIds) {
+  const groups = [...GRADE_GROUPS, { key: "other", label: "기타", cssVar: null }];
+  const tree = [];
 
   for (const group of groups) {
-    const bucket = byGrade[group.key];
-    if (!bucket || !bucket.members.length) continue;
-    anyRendered = true;
+    const gradeMembers = members.filter((m) => (getGradeGroup(m.학년반)?.key || "other") === group.key);
+    if (!gradeMembers.length) continue;
 
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "grade-card";
-    card.setAttribute("aria-expanded", String(expandedGrades.has(group.key)));
-    if (group.cssVar) card.style.setProperty("--grade-color", `var(${group.cssVar})`);
-    if (group.tintVar) card.style.setProperty("--grade-tint", `var(${group.tintVar})`);
-
-    const dot = document.createElement("span");
-    dot.className = "grade-card__dot";
-    const label = document.createElement("span");
-    label.className = "grade-card__label text-caption-strong";
-    label.textContent = group.label;
-    const count = document.createElement("span");
-    count.className = "grade-card__count";
-    count.textContent = bucket.members.length + "명";
-    card.append(dot, label, count);
-
-    card.addEventListener("click", () => {
-      if (expandedGrades.has(group.key)) expandedGrades.delete(group.key);
-      else expandedGrades.add(group.key);
-      renderGradeCards(byGrade);
-    });
-
-    gradeCardsEl.appendChild(card);
-
-    if (expandedGrades.has(group.key)) {
-      const roster = renderRosterList(bucket.members);
-      roster.classList.add("grade-card__roster");
-      gradeCardsEl.appendChild(roster);
+    const byClass = new Map();
+    for (const m of gradeMembers) {
+      const classKey = abbreviateClass(m.학년반) || "미분류";
+      if (!byClass.has(classKey)) byClass.set(classKey, []);
+      byClass.get(classKey).push(m);
     }
+
+    const classes = [...byClass.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0], "ko", { numeric: true }))
+      .map(([classKey, classMembers]) => {
+        const attended = classMembers.filter((m) => attendedIds.has(m.회원ID));
+        const absent = classMembers.filter((m) => !attendedIds.has(m.회원ID));
+        return { classKey, total: classMembers.length, attended, absent };
+      });
+
+    const totalAttended = gradeMembers.filter((m) => attendedIds.has(m.회원ID)).length;
+    tree.push({ key: group.key, label: group.label, cssVar: group.cssVar, total: gradeMembers.length, totalAttended, classes });
   }
 
-  gradeEmptyEl.style.display = anyRendered ? "none" : "block";
+  return tree;
 }
 
-function renderClassList(byClass) {
-  classListEl.innerHTML = "";
-  const classKeys = Object.keys(byClass).sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
+function renderTree(tree) {
+  statTreeEl.innerHTML = "";
+  statTreeEmptyEl.style.display = tree.length ? "none" : "block";
 
-  for (const classKey of classKeys) {
-    const bucket = byClass[classKey];
-    const group = GRADE_GROUPS.find((g) => g.key === bucket.gradeKey);
-    const wrap = document.createElement("div");
-    wrap.className = "class-group";
-    if (group) wrap.style.setProperty("--grade-color", `var(${group.cssVar})`);
+  for (const grade of tree) {
+    const gradeWrap = document.createElement("div");
+    gradeWrap.className = "grade-group";
+    if (grade.cssVar) gradeWrap.style.setProperty("--grade-color", `var(${grade.cssVar})`);
 
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "class-row";
-    row.setAttribute("aria-expanded", String(expandedClasses.has(classKey)));
-
-    const dot = document.createElement("span");
-    dot.className = "class-row__dot";
+    const gradeRow = document.createElement("button");
+    gradeRow.type = "button";
+    gradeRow.className = "grade-row";
+    gradeRow.setAttribute("aria-expanded", String(expandedGrades.has(grade.key)));
 
     const label = document.createElement("span");
-    label.className = "class-row__label text-body on-light";
-    label.textContent = classKey;
+    label.className = "grade-row__label text-body-strong";
+    label.textContent = grade.label;
 
     const count = document.createElement("span");
-    count.className = "class-row__count";
-    count.textContent = bucket.members.length + "명";
+    count.className = "grade-row__count";
+    count.textContent = `${grade.totalAttended}/${grade.total}명`;
 
     const chevron = document.createElement("span");
-    chevron.className = "class-row__chevron";
+    chevron.className = "grade-row__chevron";
     chevron.innerHTML = CHEVRON_SVG;
 
-    row.append(dot, label, count, chevron);
-    row.addEventListener("click", () => {
-      if (expandedClasses.has(classKey)) expandedClasses.delete(classKey);
-      else expandedClasses.add(classKey);
-      renderClassList(byClass);
+    gradeRow.append(label, count, chevron);
+    gradeRow.addEventListener("click", () => {
+      if (expandedGrades.has(grade.key)) expandedGrades.delete(grade.key);
+      else expandedGrades.add(grade.key);
+      renderTree(tree);
     });
+    gradeWrap.appendChild(gradeRow);
 
-    wrap.appendChild(row);
-    if (expandedClasses.has(classKey)) {
-      wrap.appendChild(renderRosterList(bucket.members));
+    if (expandedGrades.has(grade.key)) {
+      const classPanel = document.createElement("div");
+      classPanel.className = "class-panel";
+
+      for (const cls of grade.classes) {
+        const classKeyFull = `${grade.key}::${cls.classKey}`;
+        const classWrap = document.createElement("div");
+        classWrap.className = "class-group";
+
+        const classRow = document.createElement("button");
+        classRow.type = "button";
+        classRow.className = "class-row";
+        classRow.setAttribute("aria-expanded", String(expandedClasses.has(classKeyFull)));
+
+        const classLabel = document.createElement("span");
+        classLabel.className = "class-row__label text-body on-light";
+        classLabel.textContent = cls.classKey;
+
+        const classCount = document.createElement("span");
+        classCount.className = "class-row__count";
+        classCount.textContent = `${cls.attended.length}/${cls.total}명`;
+
+        const classChevron = document.createElement("span");
+        classChevron.className = "class-row__chevron";
+        classChevron.innerHTML = CHEVRON_SVG;
+
+        classRow.append(classLabel, classCount, classChevron);
+        classRow.addEventListener("click", () => {
+          if (expandedClasses.has(classKeyFull)) expandedClasses.delete(classKeyFull);
+          else expandedClasses.add(classKeyFull);
+          renderTree(tree);
+        });
+        classWrap.appendChild(classRow);
+
+        if (expandedClasses.has(classKeyFull)) {
+          const rosterPanel = document.createElement("div");
+          rosterPanel.className = "roster-panel";
+          rosterPanel.appendChild(renderRosterGroup("출석학생", cls.attended));
+          rosterPanel.appendChild(renderRosterGroup("미출석학생", cls.absent));
+          classWrap.appendChild(rosterPanel);
+        }
+
+        classPanel.appendChild(classWrap);
+      }
+
+      gradeWrap.appendChild(classPanel);
     }
-    classListEl.appendChild(wrap);
+
+    statTreeEl.appendChild(gradeWrap);
   }
-
-  classEmptyEl.style.display = classKeys.length ? "none" : "block";
-}
-
-function computeStats(seats) {
-  const members = Object.values(seats);
-  const byGrade = {};
-  const byClass = {};
-
-  for (const m of members) {
-    const group = getGradeGroup(m.학년반);
-    const gradeKey = group ? group.key : "other";
-    (byGrade[gradeKey] || (byGrade[gradeKey] = { members: [] })).members.push(m);
-
-    const classKey = abbreviateClass(m.학년반) || "미분류";
-    const classBucket = byClass[classKey] || (byClass[classKey] = { members: [], gradeKey });
-    classBucket.members.push(m);
-  }
-
-  return { total: members.length, byGrade, byClass };
 }
 
 async function loadStats() {
-  const res = await apiGet("getSeats", { time: currentTime });
-  const seats = res.seats || {};
-  const { total, byGrade, byClass } = computeStats(seats);
+  let attendedMembers;
+  if (currentTime === ALL_SUMMARY) {
+    const res = await apiGet("getAllAttendance");
+    attendedMembers = res.members || [];
+  } else {
+    const res = await apiGet("getSeats", { time: currentTime });
+    attendedMembers = Object.values(res.seats || {});
+  }
+  await membersReady;
 
-  heroTimeEl.textContent = currentTime;
-  totalCountEl.innerHTML = `<span>${total}</span>명`;
-  renderGradeCards(byGrade);
-  renderClassList(byClass);
+  const attendedIds = new Set(attendedMembers.map((m) => m.회원ID));
+  const tree = buildTree(allMembers, attendedIds);
+
+  heroTimeEl.textContent = currentTime === ALL_SUMMARY ? "전체 요약" : currentTime;
+  totalCountEl.innerHTML = `<span>${attendedIds.size}</span>명`;
+  renderTree(tree);
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";
 }
 
