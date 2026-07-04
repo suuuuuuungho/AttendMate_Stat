@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260704h";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704h";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704h";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704h";
-import { initAppSwitcher } from "./app-switcher.js?v=20260704h";
+import { TIMES } from "./config.js?v=20260704i";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704i";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704i";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704i";
+import { initAppSwitcher } from "./app-switcher.js?v=20260704i";
 
 initAppSwitcher();
 
@@ -31,9 +31,10 @@ const MESSAGE_ICON_SVG =
   '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
 
 // "전체 요약"은 타임 구분 없이 한 번이라도 체크인한 학생을 출석으로 친다 (config.js의
-// 실제 타임 값과 절대 겹치지 않도록 특수 토큰을 쓴다).
+// 실제 타임 값과 절대 겹치지 않도록 특수 토큰을 쓴다). Control Panel의 타임 활성/비활성과
+// 무관하게 항상 노출한다 — 특정 타임 편집이 아니라 전체 집계 뷰라서.
 const ALL_SUMMARY = "__ALL__";
-const timeOptions = [{ value: ALL_SUMMARY, label: "전체 요약" }, ...TIMES];
+let activeTimes = TIMES; // Control Panel이 관리하는 활성 타임 목록 — 로드 전까지는 전체를 그대로 노출
 
 let currentTime = TIMES[0];
 let allMembers = [];
@@ -48,6 +49,7 @@ async function loadAllMembers() {
 const membersReady = loadAllMembers();
 
 function refreshTabs() {
+  const timeOptions = [{ value: ALL_SUMMARY, label: "전체 요약" }, ...activeTimes];
   renderTimeTabs(timeTabsEl, timeOptions, currentTime, (time) => {
     currentTime = time;
     expandedGrades.clear();
@@ -55,6 +57,20 @@ function refreshTabs() {
     refreshTabs();
     loadStats();
   });
+}
+
+async function refreshActiveTimes() {
+  const res = await apiGet("getActiveTimes");
+  const next = res.activeTimes && res.activeTimes.length ? TIMES.filter((t) => res.activeTimes.includes(t)) : TIMES;
+  const changed = next.join(",") !== activeTimes.join(",");
+  activeTimes = next;
+  if (currentTime !== ALL_SUMMARY && !activeTimes.includes(currentTime)) {
+    currentTime = ALL_SUMMARY;
+    refreshTabs();
+    loadStats();
+  } else if (changed) {
+    refreshTabs();
+  }
 }
 
 /** "PM 6:26" 형식 — AttendMate 좌석 앱과 동일한 포맷. */
@@ -378,6 +394,8 @@ refreshBtn.addEventListener("click", loadStats);
 
 refreshTabs();
 loadStats();
+refreshActiveTimes();
 setInterval(loadStats, 15000);
+setInterval(refreshActiveTimes, 15000);
 // 좌석 체크 페이지와 동일하게, Log 테이블 변경을 폴링 없이 즉시 반영 (15초 폴링은 안전망으로 유지).
 subscribeToSeatChanges(() => loadStats());

@@ -1,12 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20260704h";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20260704i";
 import {
   mockGetSeats,
   mockGetAllMembers,
   mockGetAllAttendance,
   mockMarkAttendance,
   mockCancelAttendance,
-} from "./mock.js?v=20260704h";
+} from "./mock.js?v=20260704i";
 
 const USE_MOCK = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 const supabase = USE_MOCK ? null : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -44,7 +44,19 @@ export async function apiGet(action, params = {}) {
   if (action === "getSeats") return getSeats(params.time);
   if (action === "getAllMembers") return getAllMembers();
   if (action === "getAllAttendance") return getAllAttendance();
+  if (action === "getActiveTimes") return getActiveTimes();
   return { error: "알 수 없는 action: " + action };
+}
+
+/**
+ * AttendMate_Admin의 Control Panel이 관리하는 타임 활성화 상태.
+ * TimeControl 테이블이 아직 없거나 조회에 실패하면 null(= 제어 없음, 전체 노출)을 반환한다.
+ */
+async function getActiveTimes() {
+  if (USE_MOCK) return { activeTimes: null };
+  const { data, error } = await supabase.from("TimeControl").select("Time,Active");
+  if (error || !data || !data.length) return { activeTimes: null };
+  return { activeTimes: data.filter((r) => r.Active).map((r) => r.Time) };
 }
 
 /** "출석 수정" 버튼 전용 — 실제 좌석 배정 없이 출석/미출석만 토글한다. */
