@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260704i";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704i";
-import { renderTimeTabs } from "./time-tabs.js?v=20260704i";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704i";
-import { initAppSwitcher } from "./app-switcher.js?v=20260704i";
+import { TIMES } from "./config.js?v=20260704j";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260704j";
+import { renderTimeTabs } from "./time-tabs.js?v=20260704j";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260704j";
+import { initAppSwitcher } from "./app-switcher.js?v=20260704j";
 
 initAppSwitcher();
 
