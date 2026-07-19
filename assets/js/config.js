@@ -5,6 +5,7 @@ export const SUPABASE_ANON_KEY = "sb_publishable_IXVkIRdwEmrEW9Bshsb5dw_okT8thEw
 
 // 타임 타이틀은 언제든지 바뀔 수 있음 — AttendMate 쪽과 동일하게 유지할 것.
 export const TIMES = [
+  "7/19(주) 중등부예배",
   "7/27(월) 저녁",
   "7/28(화) 오전",
   "7/28(화) 저녁",
