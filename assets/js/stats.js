@@ -1,17 +1,19 @@
-import { TIMES } from "./config.js?v=20260725a";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725a";
-import { renderTimeTabs } from "./time-tabs.js?v=20260725a";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725a";
-import { initAppSwitcher } from "./app-switcher.js?v=20260725a";
+import { TIMES } from "./config.js?v=20260725b";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725b";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725b";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725b";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725b";
 
 initAppSwitcher();
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 const refreshBtn = document.getElementById("refreshBtn");
+const statHeroEl = document.getElementById("statHero");
 const heroTimeEl = document.getElementById("heroTime");
 const studentCountEl = document.getElementById("studentCount");
 const teacherCountEl = document.getElementById("teacherCount");
+const summaryNoteEl = document.getElementById("summaryNote");
 const statTreeEl = document.getElementById("statTree");
 const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 
@@ -438,9 +440,12 @@ async function loadStats() {
   const teacherCount = tree.find((g) => g.key === "teacher")?.totalAttended || 0;
   const studentCount = attendedIds.size - teacherCount;
 
-  heroTimeEl.textContent = currentTime === ALL_SUMMARY ? "전체 요약" : currentTime;
+  const isSummary = currentTime === ALL_SUMMARY;
+  heroTimeEl.textContent = isSummary ? "전체 요약" : currentTime;
   studentCountEl.textContent = `${studentCount}명`;
   teacherCountEl.textContent = `${teacherCount}명`;
+  statHeroEl.classList.toggle("stat-hero--summary", isSummary);
+  summaryNoteEl.style.display = isSummary ? "block" : "none";
   renderTree(tree);
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";
 }

@@ -105,6 +105,20 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+/* "전체 요약" 탭일 때만 다홍색으로 — 특정 타임 탭(인디고)과 구분해서 지금 보고
+   있는 게 개별 타임이 아니라 전체 누적 집계라는 걸 색으로도 알려준다. */
+.stat-hero--summary {
+  background: linear-gradient(135deg, var(--color-summary), var(--color-summary-2));
+  box-shadow: 0 16px 40px -16px rgba(232, 71, 44, 0.55);
+}
+
+.stat-hero__note {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.72);
+}
+
 /* ===================== 섹션 공통 ===================== */
 
 .stat-section__eyebrow {
