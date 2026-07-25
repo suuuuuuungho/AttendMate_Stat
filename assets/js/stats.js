@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260725e";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725e";
-import { renderTimeTabs } from "./time-tabs.js?v=20260725e";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725e";
-import { initAppSwitcher } from "./app-switcher.js?v=20260725e";
+import { TIMES } from "./config.js?v=20260725f";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725f";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725f";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725f";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725f";
 
 initAppSwitcher();
 
@@ -271,11 +271,13 @@ function selectQuickMember(m) {
 function updateQuickActionButton() {
   if (!selectedQuickMember) {
     quickActionBtn.textContent = "출석 처리";
+    quickActionBtn.classList.remove("quick-attendance__action-btn--cancel");
     quickActionBtn.disabled = true;
     return;
   }
   const attended = currentAttendedIds.has(selectedQuickMember.회원ID);
   quickActionBtn.textContent = attended ? "출석 취소" : "출석 처리";
+  quickActionBtn.classList.toggle("quick-attendance__action-btn--cancel", attended);
   quickActionBtn.disabled = false;
 }
 

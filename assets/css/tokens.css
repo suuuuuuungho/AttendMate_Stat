@@ -23,6 +23,10 @@
   --color-summary: #e8472c;
   --color-summary-2: #ff7a52;
 
+  /* 되돌리기(취소류) 액션 전용 — Apple system red. */
+  --color-danger: #ff3b30;
+  --color-danger-2: #d70015;
+
   /* ===== Color / Surface ===== */
   --color-canvas: #ffffff;
   --color-canvas-parchment: #f5f5f7;

@@ -122,10 +122,13 @@
   color: var(--color-ink-muted-48);
 }
 
-/* 처리 버튼은 검색창 옆에 항상 떠 있고, 학생을 선택하기 전엔 비활성 상태. */
+/* 처리 버튼은 검색창 옆에 항상 떠 있고, 학생을 선택하기 전엔 비활성 상태.
+   "출석 취소"(되돌리기) 상태일 때는 실수로 누르지 않도록 레드 계열로 구분한다. */
 #quickActionBtn { flex: 0 0 auto; }
 #quickActionBtn:disabled { opacity: 0.4; cursor: default; }
 #quickActionBtn:disabled:active { transform: none; }
+#quickActionBtn.quick-attendance__action-btn--cancel { background: var(--color-danger); }
+#quickActionBtn.quick-attendance__action-btn--cancel:focus-visible { outline-color: var(--color-danger-2); }
 
 /* ===================== 전체 출석 히어로 ===================== */
 
