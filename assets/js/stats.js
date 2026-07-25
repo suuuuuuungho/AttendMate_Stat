@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260725d";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725d";
-import { renderTimeTabs } from "./time-tabs.js?v=20260725d";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725d";
-import { initAppSwitcher } from "./app-switcher.js?v=20260725d";
+import { TIMES } from "./config.js?v=20260725e";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725e";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725e";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725e";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725e";
 
 initAppSwitcher();
 
@@ -20,7 +20,6 @@ const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 const quickAttendanceEl = document.getElementById("quickAttendance");
 const quickSearchInput = document.getElementById("quickSearchInput");
 const quickSearchResultsEl = document.getElementById("quickSearchResults");
-const quickSelectedLabelEl = document.getElementById("quickSelectedLabel");
 const quickActionBtn = document.getElementById("quickActionBtn");
 const MAX_QUICK_RESULTS = 20;
 
@@ -267,19 +266,15 @@ function selectQuickMember(m) {
   updateQuickActionButton();
 }
 
-/** 선택된 학생 + 현재 출석 여부에 맞춰 라벨/버튼 문구를 갱신한다. 15초 폴링마다도 호출돼서
+/** 선택된 학생 + 현재 출석 여부에 맞춰 버튼 문구를 갱신한다. 15초 폴링마다도 호출돼서
  *  선택해둔 채로 기다리는 동안 다른 기기의 처리 결과가 반영되면 버튼 문구도 따라 바뀐다. */
 function updateQuickActionButton() {
   if (!selectedQuickMember) {
-    quickSelectedLabelEl.textContent = "학생을 선택해주세요";
-    quickSelectedLabelEl.classList.remove("quick-attendance__selected--active");
     quickActionBtn.textContent = "출석 처리";
     quickActionBtn.disabled = true;
     return;
   }
   const attended = currentAttendedIds.has(selectedQuickMember.회원ID);
-  quickSelectedLabelEl.textContent = `${selectedQuickMember.이름} · ${abbreviateClass(selectedQuickMember.학년반) || selectedQuickMember.학년반 || ""}`;
-  quickSelectedLabelEl.classList.add("quick-attendance__selected--active");
   quickActionBtn.textContent = attended ? "출석 취소" : "출석 처리";
   quickActionBtn.disabled = false;
 }

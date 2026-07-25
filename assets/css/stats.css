@@ -80,6 +80,12 @@
 .quick-attendance__search {
   position: relative;
 }
+.quick-attendance__search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.quick-attendance__search-row .search-input { flex: 1; }
 .quick-attendance__results {
   position: absolute;
   left: 0;
@@ -116,16 +122,8 @@
   color: var(--color-ink-muted-48);
 }
 
-/* 검색으로 고른 학생 + 처리 버튼 — 버튼은 항상 떠 있고, 선택 전엔 비활성 상태. */
-.quick-attendance__action {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: var(--space-xs) 2px 0;
-}
-#quickSelectedLabel { color: var(--color-ink-muted-48); }
-#quickSelectedLabel.quick-attendance__selected--active { color: var(--color-ink); font-weight: 600; }
+/* 처리 버튼은 검색창 옆에 항상 떠 있고, 학생을 선택하기 전엔 비활성 상태. */
+#quickActionBtn { flex: 0 0 auto; }
 #quickActionBtn:disabled { opacity: 0.4; cursor: default; }
 #quickActionBtn:disabled:active { transform: none; }
 

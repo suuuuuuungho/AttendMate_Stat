@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>출석 통계 — AttendMate_Stat</title>
 <meta name="description" content="AttendMate_Stat 타임/학년/반별 출석 통계">
-<link rel="stylesheet" href="assets/css/tokens.css?v=20260725d">
-<link rel="stylesheet" href="assets/css/base.css?v=20260725d">
-<link rel="stylesheet" href="assets/css/components.css?v=20260725d">
-<link rel="stylesheet" href="assets/css/stats.css?v=20260725d">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20260725e">
+<link rel="stylesheet" href="assets/css/base.css?v=20260725e">
+<link rel="stylesheet" href="assets/css/components.css?v=20260725e">
+<link rel="stylesheet" href="assets/css/stats.css?v=20260725e">
 </head>
 <body>
 
@@ -58,12 +58,11 @@
   <section id="quickAttendance" class="quick-attendance">
     <div class="quick-attendance__label text-caption-strong">빠른 출석 처리</div>
     <div class="quick-attendance__search">
-      <input id="quickSearchInput" class="search-input" type="text" placeholder="이름, 회원ID, 학년반 검색">
+      <div class="quick-attendance__search-row">
+        <input id="quickSearchInput" class="search-input" type="text" placeholder="이름, 회원ID, 학년반 검색">
+        <button id="quickActionBtn" type="button" class="btn-primary" disabled>출석 처리</button>
+      </div>
       <div id="quickSearchResults" class="quick-attendance__results" style="display:none;"></div>
-    </div>
-    <div class="quick-attendance__action">
-      <span id="quickSelectedLabel" class="text-caption">학생을 선택해주세요</span>
-      <button id="quickActionBtn" type="button" class="btn-primary" disabled>출석 처리</button>
     </div>
   </section>
 
@@ -94,6 +93,6 @@
   </div>
 </div>
 
-<script type="module" src="assets/js/stats.js?v=20260725d"></script>
+<script type="module" src="assets/js/stats.js?v=20260725e"></script>
 </body>
 </html>
