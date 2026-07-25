@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260725c";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725c";
-import { renderTimeTabs } from "./time-tabs.js?v=20260725c";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725c";
-import { initAppSwitcher } from "./app-switcher.js?v=20260725c";
+import { TIMES } from "./config.js?v=20260725d";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725d";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725d";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725d";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725d";
 
 initAppSwitcher();
 
@@ -20,6 +20,8 @@ const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 const quickAttendanceEl = document.getElementById("quickAttendance");
 const quickSearchInput = document.getElementById("quickSearchInput");
 const quickSearchResultsEl = document.getElementById("quickSearchResults");
+const quickSelectedLabelEl = document.getElementById("quickSelectedLabel");
+const quickActionBtn = document.getElementById("quickActionBtn");
 const MAX_QUICK_RESULTS = 20;
 
 const attendanceConfirmModal = document.getElementById("attendanceConfirmModal");
@@ -56,6 +58,7 @@ const expandedClasses = new Set(); // key: `${gradeKey}::${classKey}`
 // 빠른 출석 처리 검색 결과에 "출석 처리"/"출석 취소" 중 뭘 보여줄지 판단하는 기준 —
 // loadStats()가 매번 현재 타임 기준 출석자 집합으로 갱신한다.
 let currentAttendedIds = new Set();
+let selectedQuickMember = null; // 빠른 출석 처리에서 검색으로 고른 학생 — 버튼은 이 값 기준으로 동작
 
 async function loadAllMembers() {
   const res = await apiGet("getAllMembers");
@@ -243,16 +246,45 @@ async function toggleAttendance(member, attended) {
 
 /**
  * 빠른 출석 처리 — 학년/반 트리를 펼치지 않고 이름/회원ID/학년반으로 바로 검색해서
- * 그 자리에서 출석 처리(또는 이미 출석했다면 취소)할 수 있게 한다. "전체 요약"에는
- * 처리 대상 타임이 없어 숨긴다(loadStats에서 토글).
+ * 처리할 수 있게 한다. 확인 팝업 없이 바로 처리되는 대신, 검색 결과를 클릭해도
+ * "선택"만 되고 실제 처리는 별도의 고정 버튼을 눌러야 일어나게 해서 오조작을 줄인다.
+ * "전체 요약"에는 처리 대상 타임이 없어 숨긴다(loadStats에서 토글).
  */
 function clearQuickSearch() {
+  selectedQuickMember = null;
   quickSearchInput.value = "";
   quickSearchResultsEl.innerHTML = "";
   quickSearchResultsEl.style.display = "none";
+  updateQuickActionButton();
 }
 
-function renderQuickSearchResults(query, results) {
+/** 검색 결과에서 학생을 클릭하면 이 상태가 된다 — 아직 아무 것도 처리되지 않는다. */
+function selectQuickMember(m) {
+  selectedQuickMember = m;
+  quickSearchResultsEl.innerHTML = "";
+  quickSearchResultsEl.style.display = "none";
+  quickSearchInput.value = `${m.이름} · ${abbreviateClass(m.학년반) || m.학년반 || ""}`;
+  updateQuickActionButton();
+}
+
+/** 선택된 학생 + 현재 출석 여부에 맞춰 라벨/버튼 문구를 갱신한다. 15초 폴링마다도 호출돼서
+ *  선택해둔 채로 기다리는 동안 다른 기기의 처리 결과가 반영되면 버튼 문구도 따라 바뀐다. */
+function updateQuickActionButton() {
+  if (!selectedQuickMember) {
+    quickSelectedLabelEl.textContent = "학생을 선택해주세요";
+    quickSelectedLabelEl.classList.remove("quick-attendance__selected--active");
+    quickActionBtn.textContent = "출석 처리";
+    quickActionBtn.disabled = true;
+    return;
+  }
+  const attended = currentAttendedIds.has(selectedQuickMember.회원ID);
+  quickSelectedLabelEl.textContent = `${selectedQuickMember.이름} · ${abbreviateClass(selectedQuickMember.학년반) || selectedQuickMember.학년반 || ""}`;
+  quickSelectedLabelEl.classList.add("quick-attendance__selected--active");
+  quickActionBtn.textContent = attended ? "출석 취소" : "출석 처리";
+  quickActionBtn.disabled = false;
+}
+
+function renderQuickSearchResults(results) {
   quickSearchResultsEl.innerHTML = "";
 
   if (!results.length) {
@@ -265,33 +297,30 @@ function renderQuickSearchResults(query, results) {
   }
 
   for (const m of results) {
-    const row = document.createElement("div");
+    const row = document.createElement("button");
+    row.type = "button";
     row.className = "quick-attendance__result";
 
-    const info = document.createElement("div");
-    info.className = "quick-attendance__result-info";
     const name = document.createElement("span");
-    name.className = "quick-attendance__result-name text-body";
+    name.className = "text-body";
     name.textContent = m.이름 || "";
     const meta = document.createElement("span");
     meta.className = "quick-attendance__result-meta text-caption";
     meta.textContent = `${abbreviateClass(m.학년반) || m.학년반 || ""} · ${m.회원ID}`;
-    info.append(name, meta);
 
-    const attended = currentAttendedIds.has(m.회원ID);
-    const actionBtn = document.createElement("button");
-    actionBtn.type = "button";
-    actionBtn.className = "roster-action-btn";
-    actionBtn.textContent = attended ? "출석 취소" : "출석 처리";
-    actionBtn.addEventListener("click", () => openAttendanceConfirm(m, attended));
-
-    row.append(info, actionBtn);
+    row.append(name, meta);
+    row.addEventListener("click", () => selectQuickMember(m));
     quickSearchResultsEl.appendChild(row);
   }
   quickSearchResultsEl.style.display = "flex";
 }
 
 function runQuickSearch(q) {
+  // 선택해둔 뒤 다시 타이핑하면 새로 검색하려는 의도로 보고 선택을 무효화한다 —
+  // 안 그러면 화면엔 새 검색 결과가 보이는데 버튼은 예전 선택 대상을 가리키게 된다.
+  selectedQuickMember = null;
+  updateQuickActionButton();
+
   if (!q) {
     quickSearchResultsEl.innerHTML = "";
     quickSearchResultsEl.style.display = "none";
@@ -306,10 +335,17 @@ function runQuickSearch(q) {
         (m.학년반 || "").toLowerCase().includes(query)
     )
     .slice(0, MAX_QUICK_RESULTS);
-  renderQuickSearchResults(q, results);
+  renderQuickSearchResults(results);
 }
 
 quickSearchInput.addEventListener("input", (e) => runQuickSearch(e.target.value.trim()));
+
+/** 팝업 없이 바로 처리 — toggleAttendance는 성공 시 clearQuickSearch()도 호출한다. */
+quickActionBtn.addEventListener("click", () => {
+  if (!selectedQuickMember) return;
+  const attended = currentAttendedIds.has(selectedQuickMember.회원ID);
+  toggleAttendance(selectedQuickMember, attended);
+});
 
 function renderRosterGroup(title, members, attended) {
   const wrap = document.createElement("div");
@@ -529,8 +565,8 @@ async function loadStats() {
   summaryNoteEl.style.display = isSummary ? "block" : "none";
   quickAttendanceEl.style.display = isSummary ? "none" : "flex";
   renderTree(tree);
-  // 검색 결과를 펼쳐둔 채로 폴링이 돌면, 출석 처리 버튼 문구가 최신 상태를 따라가게 다시 그린다.
-  if (quickSearchInput.value.trim()) runQuickSearch(quickSearchInput.value.trim());
+  // 학생을 선택해둔 채로 폴링이 돌면, 다른 기기의 처리 결과를 반영해 버튼 문구를 갱신한다.
+  updateQuickActionButton();
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";
 }
 
