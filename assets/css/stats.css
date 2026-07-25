@@ -67,6 +67,57 @@
   gap: var(--space-xxl);
 }
 
+/* ===================== 빠른 출석 처리 =====================
+   "전체 요약" 탭에서는 숨긴다 — 처리할 대상 타임이 없어서 의미가 없다. */
+.quick-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.quick-attendance__label {
+  color: var(--color-primary);
+}
+.quick-attendance__search {
+  position: relative;
+}
+.quick-attendance__results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  z-index: 150;
+  max-height: 320px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-xxs);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.3);
+}
+.quick-attendance__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.quick-attendance__result:hover { background: var(--color-canvas-parchment); }
+.quick-attendance__result-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.quick-attendance__result-name { color: var(--color-ink); }
+.quick-attendance__result-meta { color: var(--color-ink-muted-48); }
+.quick-attendance__empty {
+  padding: var(--space-sm);
+  text-align: center;
+  color: var(--color-ink-muted-48);
+}
+
 /* ===================== 전체 출석 히어로 ===================== */
 
 .stat-hero {

@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260725b";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725b";
-import { renderTimeTabs } from "./time-tabs.js?v=20260725b";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725b";
-import { initAppSwitcher } from "./app-switcher.js?v=20260725b";
+import { TIMES } from "./config.js?v=20260725c";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725c";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725c";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725c";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725c";
 
 initAppSwitcher();
 
@@ -16,6 +16,11 @@ const teacherCountEl = document.getElementById("teacherCount");
 const summaryNoteEl = document.getElementById("summaryNote");
 const statTreeEl = document.getElementById("statTree");
 const statTreeEmptyEl = document.getElementById("statTreeEmpty");
+
+const quickAttendanceEl = document.getElementById("quickAttendance");
+const quickSearchInput = document.getElementById("quickSearchInput");
+const quickSearchResultsEl = document.getElementById("quickSearchResults");
+const MAX_QUICK_RESULTS = 20;
 
 const attendanceConfirmModal = document.getElementById("attendanceConfirmModal");
 const attendanceConfirmTitle = document.getElementById("attendanceConfirmTitle");
@@ -48,6 +53,9 @@ let allMembers = [];
 // 카드/행을 펼쳐둔 상태는 15초 폴링마다 다시 렌더링해도 유지되도록 key 집합으로 따로 관리한다.
 const expandedGrades = new Set();
 const expandedClasses = new Set(); // key: `${gradeKey}::${classKey}`
+// 빠른 출석 처리 검색 결과에 "출석 처리"/"출석 취소" 중 뭘 보여줄지 판단하는 기준 —
+// loadStats()가 매번 현재 타임 기준 출석자 집합으로 갱신한다.
+let currentAttendedIds = new Set();
 
 async function loadAllMembers() {
   const res = await apiGet("getAllMembers");
@@ -61,6 +69,7 @@ function refreshTabs() {
     currentTime = time;
     expandedGrades.clear();
     expandedClasses.clear();
+    clearQuickSearch(); // 다른 타임의 검색 결과로 잘못 처리하는 사고 방지
     refreshTabs();
     loadStats();
   });
@@ -222,6 +231,7 @@ async function toggleAttendance(member, attended) {
       : await apiPost("markAttendance", { 회원ID: member.회원ID, 이름: member.이름, 학년반: member.학년반, 타임: currentTime });
     if (res.success) {
       toast.complete(attended ? `${member.이름}님 출석을 취소했습니다` : `${member.이름}님 출석 처리했습니다`);
+      clearQuickSearch();
       loadStats();
     } else {
       toast.fail(res.error || "처리에 실패했습니다.");
@@ -230,6 +240,76 @@ async function toggleAttendance(member, attended) {
     toast.fail("네트워크 오류로 처리에 실패했습니다.");
   }
 }
+
+/**
+ * 빠른 출석 처리 — 학년/반 트리를 펼치지 않고 이름/회원ID/학년반으로 바로 검색해서
+ * 그 자리에서 출석 처리(또는 이미 출석했다면 취소)할 수 있게 한다. "전체 요약"에는
+ * 처리 대상 타임이 없어 숨긴다(loadStats에서 토글).
+ */
+function clearQuickSearch() {
+  quickSearchInput.value = "";
+  quickSearchResultsEl.innerHTML = "";
+  quickSearchResultsEl.style.display = "none";
+}
+
+function renderQuickSearchResults(query, results) {
+  quickSearchResultsEl.innerHTML = "";
+
+  if (!results.length) {
+    const empty = document.createElement("div");
+    empty.className = "quick-attendance__empty text-caption";
+    empty.textContent = "검색 결과가 없습니다.";
+    quickSearchResultsEl.appendChild(empty);
+    quickSearchResultsEl.style.display = "flex";
+    return;
+  }
+
+  for (const m of results) {
+    const row = document.createElement("div");
+    row.className = "quick-attendance__result";
+
+    const info = document.createElement("div");
+    info.className = "quick-attendance__result-info";
+    const name = document.createElement("span");
+    name.className = "quick-attendance__result-name text-body";
+    name.textContent = m.이름 || "";
+    const meta = document.createElement("span");
+    meta.className = "quick-attendance__result-meta text-caption";
+    meta.textContent = `${abbreviateClass(m.학년반) || m.학년반 || ""} · ${m.회원ID}`;
+    info.append(name, meta);
+
+    const attended = currentAttendedIds.has(m.회원ID);
+    const actionBtn = document.createElement("button");
+    actionBtn.type = "button";
+    actionBtn.className = "roster-action-btn";
+    actionBtn.textContent = attended ? "출석 취소" : "출석 처리";
+    actionBtn.addEventListener("click", () => openAttendanceConfirm(m, attended));
+
+    row.append(info, actionBtn);
+    quickSearchResultsEl.appendChild(row);
+  }
+  quickSearchResultsEl.style.display = "flex";
+}
+
+function runQuickSearch(q) {
+  if (!q) {
+    quickSearchResultsEl.innerHTML = "";
+    quickSearchResultsEl.style.display = "none";
+    return;
+  }
+  const query = q.toLowerCase();
+  const results = allMembers
+    .filter(
+      (m) =>
+        (m.이름 || "").toLowerCase().includes(query) ||
+        (m.회원ID || "").toLowerCase().includes(query) ||
+        (m.학년반 || "").toLowerCase().includes(query)
+    )
+    .slice(0, MAX_QUICK_RESULTS);
+  renderQuickSearchResults(q, results);
+}
+
+quickSearchInput.addEventListener("input", (e) => runQuickSearch(e.target.value.trim()));
 
 function renderRosterGroup(title, members, attended) {
   const wrap = document.createElement("div");
@@ -434,6 +514,7 @@ async function loadStats() {
   await membersReady;
 
   const attendedIds = new Set(attendedMembers.map((m) => m.회원ID));
+  currentAttendedIds = attendedIds;
   const tree = buildTree(allMembers, attendedIds);
 
   // 전체 인원 대신 학생/교사를 나눠 보여준다 — 섞인 숫자만으론 구성을 알 수 없어서.
@@ -446,7 +527,10 @@ async function loadStats() {
   teacherCountEl.textContent = `${teacherCount}명`;
   statHeroEl.classList.toggle("stat-hero--summary", isSummary);
   summaryNoteEl.style.display = isSummary ? "block" : "none";
+  quickAttendanceEl.style.display = isSummary ? "none" : "flex";
   renderTree(tree);
+  // 검색 결과를 펼쳐둔 채로 폴링이 돌면, 출석 처리 버튼 문구가 최신 상태를 따라가게 다시 그린다.
+  if (quickSearchInput.value.trim()) runQuickSearch(quickSearchInput.value.trim());
   lastUpdatedEl.textContent = formatUpdatedTime(new Date()) + " Updated";
 }
 
