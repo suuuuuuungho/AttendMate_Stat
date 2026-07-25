@@ -1,12 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20260719a";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20260725a";
 import {
   mockGetSeats,
   mockGetAllMembers,
   mockGetAllAttendance,
+  mockGetMemberAttendance,
   mockMarkAttendance,
   mockCancelAttendance,
-} from "./mock.js?v=20260719a";
+} from "./mock.js?v=20260725a";
 
 const USE_MOCK = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 const supabase = USE_MOCK ? null : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -45,6 +46,7 @@ export async function apiGet(action, params = {}) {
   if (action === "getSeats") return getSeats(params.time);
   if (action === "getAllMembers") return getAllMembers();
   if (action === "getAllAttendance") return getAllAttendance();
+  if (action === "getMemberAttendance") return getMemberAttendance(params.회원ID);
   if (action === "getActiveTimes") return getActiveTimes();
   return { error: "알 수 없는 action: " + action };
 }
@@ -82,6 +84,7 @@ function mockGet(action, params) {
   if (action === "getSeats") return mockGetSeats(params.time);
   if (action === "getAllMembers") return mockGetAllMembers();
   if (action === "getAllAttendance") return mockGetAllAttendance();
+  if (action === "getMemberAttendance") return mockGetMemberAttendance(params.회원ID);
   return { error: "알 수 없는 action: " + action };
 }
 
@@ -126,6 +129,17 @@ async function getAllAttendance() {
     return { members: [...byId.values()] };
   } catch (e) {
     return { members: [] };
+  }
+}
+
+/** 이름 클릭 시 상세 팝업 전용: 한 학생이 어떤 타임들에 출석했는지 전부 가져온다. */
+async function getMemberAttendance(회원ID) {
+  if (!회원ID) return { records: [] };
+  try {
+    const data = await fetchAllRows("Log", "Time,Seat", ["ID", Number(회원ID)]);
+    return { records: data.map((row) => ({ 타임: row.Time, 좌석: row.Seat })) };
+  } catch (e) {
+    return { records: [] };
   }
 }
 

@@ -84,3 +84,17 @@ export function mockCancelAttendance({ 회원ID, 타임 }) {
   mockManualAttendance.delete(`${회원ID}::${타임}`);
   return { success: true };
 }
+
+/** 이름을 문자열 해시로 돌려 학생마다 그럴듯하게 다른(하지만 매번 같은) 출석 패턴을 만든다. */
+function hashCode(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+export function mockGetMemberAttendance(회원ID) {
+  const records = TIMES.filter(
+    (t) => mockManualAttendance.has(`${회원ID}::${t}`) || hashCode(회원ID + t) % 3 !== 0
+  ).map((t) => ({ 타임: t, 좌석: "MOCK" }));
+  return { records };
+}

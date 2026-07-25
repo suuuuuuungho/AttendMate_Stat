@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260719a";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260719a";
-import { renderTimeTabs } from "./time-tabs.js?v=20260719a";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260719a";
-import { initAppSwitcher } from "./app-switcher.js?v=20260719a";
+import { TIMES } from "./config.js?v=20260725a";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260725a";
+import { renderTimeTabs } from "./time-tabs.js?v=20260725a";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260725a";
+import { initAppSwitcher } from "./app-switcher.js?v=20260725a";
 
 initAppSwitcher();
 
@@ -20,6 +20,11 @@ const attendanceConfirmTitle = document.getElementById("attendanceConfirmTitle")
 const attendanceConfirmBody = document.getElementById("attendanceConfirmBody");
 const attendanceConfirmCancelBtn = document.getElementById("attendanceConfirmCancelBtn");
 const attendanceConfirmOkBtn = document.getElementById("attendanceConfirmOkBtn");
+
+const attendanceDetailModal = document.getElementById("attendanceDetailModal");
+const attendanceDetailTitle = document.getElementById("attendanceDetailTitle");
+const attendanceDetailBody = document.getElementById("attendanceDetailBody");
+const attendanceDetailCloseBtn = document.getElementById("attendanceDetailCloseBtn");
 
 const CHEVRON_SVG =
   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -153,6 +158,52 @@ function closeAttendanceConfirm() {
   pendingToggle = null;
 }
 
+/**
+ * 이름 클릭 → 그 학생이 지금까지 어떤 타임에 출석했는지 전부 보여주는 팝업.
+ * "전체 요약"이든 특정 타임 탭이든 상관없이 항상 전체 타임 기준으로 보여준다 —
+ * 지금 보고 있는 탭 하나만으론 "전체 참석현황"이 안 보이니까.
+ */
+function closeAttendanceDetail() {
+  attendanceDetailModal.style.display = "none";
+}
+
+async function openAttendanceDetail(member) {
+  attendanceDetailTitle.textContent = `${member.이름} · ${abbreviateClass(member.학년반) || member.학년반 || ""}`;
+  attendanceDetailBody.innerHTML = '<div class="attendance-detail__loading text-caption">불러오는 중...</div>';
+  attendanceDetailModal.style.display = "flex";
+
+  const res = await apiGet("getMemberAttendance", { 회원ID: member.회원ID });
+  const attendedTimes = new Set((res.records || []).map((r) => r.타임));
+
+  const list = document.createElement("div");
+  list.className = "attendance-detail__list";
+  for (const time of TIMES) {
+    const row = document.createElement("div");
+    row.className = "attendance-detail__row";
+
+    const label = document.createElement("span");
+    label.className = "text-body on-light";
+    label.textContent = time;
+
+    const isAttended = attendedTimes.has(time);
+    const badge = document.createElement("span");
+    badge.className = "attendance-badge " + (isAttended ? "attendance-badge--yes" : "attendance-badge--no");
+    badge.textContent = isAttended ? "출석" : "미출석";
+
+    row.append(label, badge);
+    list.appendChild(row);
+  }
+
+  const summary = document.createElement("div");
+  summary.className = "attendance-detail__summary text-caption";
+  summary.textContent = `총 ${TIMES.length}회 중 ${attendedTimes.size}회 출석`;
+
+  attendanceDetailBody.innerHTML = "";
+  attendanceDetailBody.append(list, summary);
+}
+
+attendanceDetailCloseBtn.addEventListener("click", closeAttendanceDetail);
+
 attendanceConfirmCancelBtn.addEventListener("click", closeAttendanceConfirm);
 attendanceConfirmOkBtn.addEventListener("click", () => {
   if (!pendingToggle) return;
@@ -195,50 +246,54 @@ function renderRosterGroup(title, members, attended) {
     return wrap;
   }
 
-  const showActions = currentTime !== ALL_SUMMARY;
+  // 출석 처리/취소는 특정 타임이 있어야 의미가 있어 "전체 요약"에서는 뺀다.
+  // 전화/문자는 타임과 무관하니 어느 탭에서든 항상 보여준다.
+  const showToggle = currentTime !== ALL_SUMMARY;
   const sorted = [...members].sort((a, b) => (a.이름 || "").localeCompare(b.이름 || "", "ko"));
   const list = document.createElement("div");
   list.className = "roster-list";
   for (const m of sorted) {
     const item = document.createElement("div");
     item.className = "roster-item";
-    const name = document.createElement("span");
-    name.className = "roster-item__name text-body";
-    name.textContent = m.이름 || "";
-    item.appendChild(name);
 
-    if (showActions) {
-      const actions = document.createElement("div");
-      actions.className = "roster-item__actions";
+    const nameBtn = document.createElement("button");
+    nameBtn.type = "button";
+    nameBtn.className = "roster-item__name text-body";
+    nameBtn.textContent = m.이름 || "";
+    nameBtn.addEventListener("click", () => openAttendanceDetail(m));
+    item.appendChild(nameBtn);
 
+    const actions = document.createElement("div");
+    actions.className = "roster-item__actions";
+
+    if (showToggle) {
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";
       toggleBtn.className = "roster-action-btn";
       toggleBtn.textContent = attended ? "출석 취소" : "출석 처리";
       toggleBtn.addEventListener("click", () => openAttendanceConfirm(m, attended));
       actions.appendChild(toggleBtn);
-
-      if (m.전화) {
-        const callLink = document.createElement("a");
-        callLink.className = "roster-action-btn roster-action-btn--icon";
-        callLink.href = `tel:${m.전화}`;
-        callLink.title = "전화";
-        callLink.setAttribute("aria-label", "전화");
-        callLink.innerHTML = PHONE_ICON_SVG;
-        actions.appendChild(callLink);
-
-        const smsLink = document.createElement("a");
-        smsLink.className = "roster-action-btn roster-action-btn--icon";
-        smsLink.href = `sms:${m.전화}`;
-        smsLink.title = "문자";
-        smsLink.setAttribute("aria-label", "문자");
-        smsLink.innerHTML = MESSAGE_ICON_SVG;
-        actions.appendChild(smsLink);
-      }
-
-      item.appendChild(actions);
     }
 
+    if (m.전화) {
+      const callLink = document.createElement("a");
+      callLink.className = "roster-action-btn roster-action-btn--icon";
+      callLink.href = `tel:${m.전화}`;
+      callLink.title = "전화";
+      callLink.setAttribute("aria-label", "전화");
+      callLink.innerHTML = PHONE_ICON_SVG;
+      actions.appendChild(callLink);
+
+      const smsLink = document.createElement("a");
+      smsLink.className = "roster-action-btn roster-action-btn--icon";
+      smsLink.href = `sms:${m.전화}`;
+      smsLink.title = "문자";
+      smsLink.setAttribute("aria-label", "문자");
+      smsLink.innerHTML = MESSAGE_ICON_SVG;
+      actions.appendChild(smsLink);
+    }
+
+    if (actions.children.length) item.appendChild(actions);
     list.appendChild(item);
   }
   wrap.appendChild(list);

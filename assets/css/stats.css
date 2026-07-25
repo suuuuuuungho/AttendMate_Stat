@@ -247,8 +247,21 @@
 }
 .roster-item:last-child { border-bottom: none; }
 
+/* 이름 클릭 → 그 학생의 전체 타임 출석 현황 팝업. button이라 base.css가 리셋해주는
+   배경/테두리 위에 클릭 가능해 보이는 최소한의 스타일만 얹는다. */
+.roster-item__name {
+  color: var(--color-ink);
+  text-align: left;
+  padding: 3px 6px;
+  margin: -3px -6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.roster-item__name:hover { background: var(--color-canvas-parchment); color: var(--color-primary); }
+
 /* ===================== 출석 수정 / 전화 / 문자 액션 =====================
-   "전체 요약" 탭에서는 렌더링 자체를 하지 않는다 (실제 타임이 없어 출석 처리가 의미 없음). */
+   "출석 처리/취소" 토글은 "전체 요약" 탭에서는 렌더링하지 않는다(실제 타임이 없어
+   의미 없음). 전화/문자는 타임과 무관해서 모든 탭에서 항상 보여준다. */
 .roster-item__actions {
   display: flex;
   gap: 6px;
@@ -310,6 +323,46 @@
 }
 /* 타임 행은 실수가 가장 잦은 항목이라 값 색을 강조색으로 눈에 띄게 한다. */
 .attendance-confirm__row--time .attendance-confirm__value { color: var(--color-accent-2); }
+
+/* ===================== 학생별 전체 출석 현황 팝업 =====================
+   이름을 클릭하면 뜬다 — 타임별 출석/미출석을 세로로 나열해 한눈에 보이게 한다. */
+.attendance-detail__body {
+  padding: var(--space-sm) 0 0;
+}
+.attendance-detail__loading {
+  padding: var(--space-lg) 0;
+  text-align: center;
+  color: var(--color-ink-muted-48);
+}
+.attendance-detail__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.attendance-detail__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.attendance-detail__row:nth-child(odd) { background: var(--color-canvas-parchment); }
+.attendance-badge {
+  font-family: var(--font-text);
+  font-size: var(--type-fine-print-size);
+  font-weight: 600;
+  padding: 3px 11px;
+  border-radius: var(--radius-pill);
+}
+.attendance-badge--yes { background: var(--color-accent-2-soft); color: var(--color-accent-2); }
+.attendance-badge--no { background: var(--color-canvas-parchment); color: var(--color-ink-muted-48); }
+.attendance-detail__summary {
+  text-align: center;
+  color: var(--color-ink-muted-48);
+  padding: var(--space-sm) 0 0;
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-divider-soft);
+}
 
 /* 배정/취소 진행 상태 토스트 — AttendMate 좌석판과 동일한 모양. */
 .toast {
