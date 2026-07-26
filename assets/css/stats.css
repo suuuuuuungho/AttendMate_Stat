@@ -86,6 +86,10 @@
   gap: var(--space-xs);
 }
 .quick-attendance__search-row .search-input { flex: 1; }
+/* 모바일에서는 검색창이 화면을 거의 다 채워 버튼이 좁아지므로 폭을 줄인다. */
+@media (max-width: 480px) {
+  .quick-attendance__search-row .search-input { flex: 0 1 60%; min-width: 0; }
+}
 .quick-attendance__results {
   position: absolute;
   left: 0;
