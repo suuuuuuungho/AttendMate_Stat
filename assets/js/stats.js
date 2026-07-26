@@ -1,8 +1,8 @@
-import { TIMES } from "./config.js?v=20260726a";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726a";
-import { renderTimeTabs } from "./time-tabs.js?v=20260726a";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726a";
-import { initAppSwitcher } from "./app-switcher.js?v=20260726a";
+import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726b";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726b";
+import { renderTimeTabs } from "./time-tabs.js?v=20260726b";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726b";
+import { initAppSwitcher } from "./app-switcher.js?v=20260726b";
 
 initAppSwitcher();
 
@@ -18,6 +18,7 @@ const statTreeEl = document.getElementById("statTree");
 const statTreeEmptyEl = document.getElementById("statTreeEmpty");
 
 const quickAttendanceEl = document.getElementById("quickAttendance");
+const quickAttendanceLabelEl = document.getElementById("quickAttendanceLabel");
 const quickSearchInput = document.getElementById("quickSearchInput");
 const quickSearchResultsEl = document.getElementById("quickSearchResults");
 const quickActionBtn = document.getElementById("quickActionBtn");
@@ -48,6 +49,14 @@ const MESSAGE_ICON_SVG =
 // 무관하게 항상 노출한다 — 특정 타임 편집이 아니라 전체 집계 뷰라서.
 const ALL_SUMMARY = "__ALL__";
 let activeTimes = TIMES; // Control Panel이 관리하는 활성 타임 목록 — 로드 전까지는 전체를 그대로 노출
+
+/** "등록" 타임은 "출석"이 아니라 "등록"으로 부른다 — 버튼/배지/토스트 문구 전부 이 함수를 거친다. */
+function actionWord(time) {
+  return time === REGISTRATION_TIME ? "등록" : "출석";
+}
+function noActionWord(time) {
+  return time === REGISTRATION_TIME ? "미등록" : "미출석";
+}
 
 let currentTime = TIMES[0];
 let allMembers = [];
@@ -136,7 +145,7 @@ let pendingToggle = null;
 
 function openAttendanceConfirm(member, attended) {
   pendingToggle = { member, attended };
-  attendanceConfirmTitle.textContent = attended ? "출석 취소" : "출석 처리";
+  attendanceConfirmTitle.textContent = attended ? `${actionWord(currentTime)} 취소` : `${actionWord(currentTime)} 처리`;
   attendanceConfirmBody.innerHTML = "";
 
   const warning = document.createElement("div");
@@ -162,7 +171,7 @@ function openAttendanceConfirm(member, attended) {
     row.append(labelEl, valueEl);
     attendanceConfirmBody.appendChild(row);
   }
-  attendanceConfirmOkBtn.textContent = attended ? "출석 취소" : "출석 처리";
+  attendanceConfirmOkBtn.textContent = attended ? `${actionWord(currentTime)} 취소` : `${actionWord(currentTime)} 처리`;
   attendanceConfirmModal.style.display = "flex";
 }
 
@@ -201,7 +210,7 @@ async function openAttendanceDetail(member) {
     const isAttended = attendedTimes.has(time);
     const badge = document.createElement("span");
     badge.className = "attendance-badge " + (isAttended ? "attendance-badge--yes" : "attendance-badge--no");
-    badge.textContent = isAttended ? "출석" : "미출석";
+    badge.textContent = isAttended ? actionWord(time) : noActionWord(time);
 
     row.append(label, badge);
     list.appendChild(row);
@@ -226,13 +235,14 @@ attendanceConfirmOkBtn.addEventListener("click", () => {
 });
 
 async function toggleAttendance(member, attended) {
-  const toast = showToast(attended ? "출석 취소 처리 중입니다..." : "출석 처리 중입니다...");
+  const word = actionWord(currentTime);
+  const toast = showToast(attended ? `${word} 취소 처리 중입니다...` : `${word} 처리 중입니다...`);
   try {
     const res = attended
       ? await apiPost("cancelAttendance", { 회원ID: member.회원ID, 타임: currentTime })
       : await apiPost("markAttendance", { 회원ID: member.회원ID, 이름: member.이름, 학년반: member.학년반, 타임: currentTime });
     if (res.success) {
-      toast.complete(attended ? `${member.이름}님 출석을 취소했습니다` : `${member.이름}님 출석 처리했습니다`);
+      toast.complete(attended ? `${member.이름}님 ${word}을 취소했습니다` : `${member.이름}님 ${word} 처리했습니다`);
       clearQuickSearch();
       loadStats();
     } else {
@@ -270,13 +280,13 @@ function selectQuickMember(m) {
  *  선택해둔 채로 기다리는 동안 다른 기기의 처리 결과가 반영되면 버튼 문구도 따라 바뀐다. */
 function updateQuickActionButton() {
   if (!selectedQuickMember) {
-    quickActionBtn.textContent = "출석 처리";
+    quickActionBtn.textContent = `${actionWord(currentTime)} 처리`;
     quickActionBtn.classList.remove("quick-attendance__action-btn--cancel");
     quickActionBtn.disabled = true;
     return;
   }
   const attended = currentAttendedIds.has(selectedQuickMember.회원ID);
-  quickActionBtn.textContent = attended ? "출석 취소" : "출석 처리";
+  quickActionBtn.textContent = attended ? `${actionWord(currentTime)} 취소` : `${actionWord(currentTime)} 처리`;
   quickActionBtn.classList.toggle("quick-attendance__action-btn--cancel", attended);
   quickActionBtn.disabled = false;
 }
@@ -385,7 +395,7 @@ function renderRosterGroup(title, members, attended) {
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";
       toggleBtn.className = "roster-action-btn";
-      toggleBtn.textContent = attended ? "출석 취소" : "출석 처리";
+      toggleBtn.textContent = attended ? `${actionWord(currentTime)} 취소` : `${actionWord(currentTime)} 처리`;
       toggleBtn.addEventListener("click", () => openAttendanceConfirm(m, attended));
       actions.appendChild(toggleBtn);
     }
@@ -520,8 +530,8 @@ function renderTree(tree) {
         if (expandedClasses.has(classKeyFull)) {
           const rosterPanel = document.createElement("div");
           rosterPanel.className = "roster-panel";
-          rosterPanel.appendChild(renderRosterGroup("출석학생", cls.attended, true));
-          rosterPanel.appendChild(renderRosterGroup("미출석학생", cls.absent, false));
+          rosterPanel.appendChild(renderRosterGroup(`${actionWord(currentTime)}학생`, cls.attended, true));
+          rosterPanel.appendChild(renderRosterGroup(`${noActionWord(currentTime)}학생`, cls.absent, false));
           classWrap.appendChild(rosterPanel);
         }
 
@@ -561,6 +571,7 @@ async function loadStats() {
   statHeroEl.classList.toggle("stat-hero--summary", isSummary);
   summaryNoteEl.style.display = isSummary ? "block" : "none";
   quickAttendanceEl.style.display = isSummary ? "none" : "flex";
+  quickAttendanceLabelEl.textContent = `빠른 ${actionWord(currentTime)} 처리`;
   renderTree(tree);
   // 학생을 선택해둔 채로 폴링이 돌면, 다른 기기의 처리 결과를 반영해 버튼 문구를 갱신한다.
   updateQuickActionButton();

@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=20260726a";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, REGISTRATION_TIME } from "./config.js?v=20260726b";
 import {
   mockGetSeats,
   mockGetAllMembers,
@@ -7,7 +7,7 @@ import {
   mockGetMemberAttendance,
   mockMarkAttendance,
   mockCancelAttendance,
-} from "./mock.js?v=20260726a";
+} from "./mock.js?v=20260726b";
 
 const USE_MOCK = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 const supabase = USE_MOCK ? null : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -24,12 +24,13 @@ function toMember(row) {
 // supabase-js도 PostgREST 기본 1000행 제한을 그대로 받으므로 명시적으로 페이지를
 // 나눠 다 받는다 (실제 회원이 1487명이라 뒤쪽 487명 — 교사 다수 포함 — 이 잘렸었다).
 const PAGE_SIZE = 1000;
-async function fetchAllRows(table, select, eqFilter, orderBy) {
+async function fetchAllRows(table, select, eqFilter, orderBy, neqFilter) {
   let all = [];
   let from = 0;
   while (true) {
     let query = supabase.from(table).select(select).range(from, from + PAGE_SIZE - 1);
     if (eqFilter) query = query.eq(eqFilter[0], eqFilter[1]);
+    if (neqFilter) query = query.neq(neqFilter[0], neqFilter[1]);
     if (orderBy) for (const col of orderBy) query = query.order(col);
     const { data, error } = await query;
     if (error) throw error;
@@ -118,10 +119,11 @@ async function getAllMembers() {
   }
 }
 
-/** "전체 요약" 전용: 타임 구분 없이 한 번이라도 체크인한 학생 집합(회원ID로 중복 제거). */
+/** "전체 요약" 전용: 타임 구분 없이 한 번이라도 체크인한 학생 집합(회원ID로 중복 제거).
+ * "등록"은 성회 참석이 아니라 도착 등록이라 이 집계에서 제외한다. */
 async function getAllAttendance() {
   try {
-    const data = await fetchAllRows("Log", "ID,Name,Division");
+    const data = await fetchAllRows("Log", "ID,Name,Division", null, null, ["Time", REGISTRATION_TIME]);
     const byId = new Map();
     for (const row of data) {
       byId.set(String(row.ID), toMember(row));
