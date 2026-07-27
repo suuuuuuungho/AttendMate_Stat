@@ -1,8 +1,8 @@
-import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726d";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726d";
-import { renderTimeTabs } from "./time-tabs.js?v=20260726d";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726d";
-import { initAppSwitcher } from "./app-switcher.js?v=20260726d";
+import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726e";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726e";
+import { renderTimeTabs } from "./time-tabs.js?v=20260726e";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726e";
+import { initAppSwitcher } from "./app-switcher.js?v=20260726e";
 
 initAppSwitcher();
 
@@ -91,8 +91,10 @@ async function refreshActiveTimes() {
   const next = res.activeTimes && res.activeTimes.length ? TIMES.filter((t) => res.activeTimes.includes(t)) : TIMES;
   const changed = next.join(",") !== activeTimes.join(",");
   activeTimes = next;
+  // 지금 보던 타임이 비활성화되면 "전체 요약"으로 숨지 말고 활성 타임 중 첫 번째로
+  // 옮긴다 — 활성 타임이 하나도 없을 때만 최후 수단으로 전체 요약을 보여준다.
   if (currentTime !== ALL_SUMMARY && !activeTimes.includes(currentTime)) {
-    currentTime = ALL_SUMMARY;
+    currentTime = activeTimes[0] || ALL_SUMMARY;
     refreshTabs();
     loadStats();
   } else if (changed) {

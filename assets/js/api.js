@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, REGISTRATION_TIME } from "./config.js?v=20260726d";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, REGISTRATION_TIME } from "./config.js?v=20260726e";
 import {
   mockGetSeats,
   mockGetAllMembers,
@@ -7,7 +7,7 @@ import {
   mockGetMemberAttendance,
   mockMarkAttendance,
   mockCancelAttendance,
-} from "./mock.js?v=20260726d";
+} from "./mock.js?v=20260726e";
 
 const USE_MOCK = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 const supabase = USE_MOCK ? null : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
