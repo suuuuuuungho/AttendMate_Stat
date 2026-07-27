@@ -5,13 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>출석 통계 — AttendMate_Stat</title>
 <meta name="description" content="AttendMate_Stat 타임/학년/반별 출석 통계">
-<link rel="stylesheet" href="assets/css/tokens.css?v=20260726e">
-<link rel="stylesheet" href="assets/css/base.css?v=20260726e">
-<link rel="stylesheet" href="assets/css/components.css?v=20260726e">
-<link rel="stylesheet" href="assets/css/stats.css?v=20260726e">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20260727a">
+<link rel="stylesheet" href="assets/css/base.css?v=20260727a">
+<link rel="stylesheet" href="assets/css/components.css?v=20260727a">
+<link rel="stylesheet" href="assets/css/stats.css?v=20260727a">
 </head>
 <body>
 
+<div id="passwordGate" class="password-gate">
+  <div class="password-gate__card">
+    <h1 class="text-tagline on-light">AttendMate_Stat</h1>
+    <p class="text-caption" style="color: var(--color-ink-muted-48);">비밀번호를 입력하세요</p>
+    <input id="passwordInput" class="search-input" style="width:100%;" type="password" placeholder="비밀번호" autocomplete="off">
+    <div id="passwordError" class="password-gate__error text-caption" style="display:none;">비밀번호가 올바르지 않습니다</div>
+    <button id="passwordSubmitBtn" class="btn-primary" style="width:100%;">입장</button>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
 <nav class="global-nav">
   <div class="app-switcher">
     <button id="appSwitcherBtn" type="button" class="app-switcher__trigger">
@@ -92,7 +103,8 @@
     </div>
   </div>
 </div>
+</div>
 
-<script type="module" src="assets/js/stats.js?v=20260726e"></script>
+<script type="module" src="assets/js/stats.js?v=20260727a"></script>
 </body>
 </html>

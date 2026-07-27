@@ -1,5 +1,28 @@
 /* AttendMate_Stat — 통계 페이지 전용 컴포넌트 */
 
+/* ===================== 비밀번호 게이트 ===================== */
+.password-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-black);
+  padding: var(--space-lg);
+}
+.password-gate__card {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  text-align: center;
+}
+.password-gate__error {
+  color: #ff3b30;
+}
+
 /* 출석 처리/취소 확인 팝업 — AttendMate 좌석판의 모달과 동일한 모양(화면 중앙 고정
    오버레이). 이 규칙이 없으면 modal-overlay가 그냥 페이지 맨 아래로 흘러내려간다. */
 .modal-overlay {

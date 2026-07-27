@@ -1,10 +1,43 @@
-import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726e";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726e";
-import { renderTimeTabs } from "./time-tabs.js?v=20260726e";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726e";
-import { initAppSwitcher } from "./app-switcher.js?v=20260726e";
+import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260727a";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260727a";
+import { renderTimeTabs } from "./time-tabs.js?v=20260727a";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260727a";
+import { initAppSwitcher } from "./app-switcher.js?v=20260727a";
 
 initAppSwitcher();
+
+/* ===================== 비밀번호 게이트 =====================
+ * 한 번 통과하면 다시 묻지 않도록 localStorage에 남긴다(브라우저를 새로 열어도 유지). */
+const passwordGateEl = document.getElementById("passwordGate");
+const appRootEl = document.getElementById("appRoot");
+const passwordInput = document.getElementById("passwordInput");
+const passwordError = document.getElementById("passwordError");
+const passwordSubmitBtn = document.getElementById("passwordSubmitBtn");
+
+const STAT_PASSWORD = "11";
+const AUTH_KEY = "attendmate_stat_authed";
+
+function unlock() {
+  localStorage.setItem(AUTH_KEY, "1");
+  passwordGateEl.style.display = "none";
+  appRootEl.style.display = "block";
+  initStats();
+}
+
+function tryPassword() {
+  if (passwordInput.value === STAT_PASSWORD) {
+    unlock();
+  } else {
+    passwordError.style.display = "block";
+    passwordInput.value = "";
+    passwordInput.focus();
+  }
+}
+
+passwordSubmitBtn.addEventListener("click", tryPassword);
+passwordInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") tryPassword();
+});
 
 const timeTabsEl = document.getElementById("timeTabs");
 const lastUpdatedEl = document.getElementById("lastUpdated");
@@ -72,7 +105,7 @@ async function loadAllMembers() {
   const res = await apiGet("getAllMembers");
   allMembers = res.members || [];
 }
-const membersReady = loadAllMembers();
+let membersReady;
 
 function refreshTabs() {
   const timeOptions = [{ value: ALL_SUMMARY, label: "전체 요약" }, ...activeTimes];
@@ -582,10 +615,26 @@ async function loadStats() {
 
 refreshBtn.addEventListener("click", loadStats);
 
-refreshTabs();
-loadStats();
-refreshActiveTimes();
-setInterval(loadStats, 15000);
-setInterval(refreshActiveTimes, 15000);
-// 좌석 체크 페이지와 동일하게, Log 테이블 변경을 폴링 없이 즉시 반영 (15초 폴링은 안전망으로 유지).
-subscribeToSeatChanges(() => loadStats());
+/* ===================== 초기화(비밀번호 통과 후) ===================== */
+let initialized = false;
+function initStats() {
+  if (initialized) return;
+  initialized = true;
+  membersReady = loadAllMembers();
+  refreshTabs();
+  loadStats();
+  refreshActiveTimes();
+  setInterval(loadStats, 15000);
+  setInterval(refreshActiveTimes, 15000);
+  // 좌석 체크 페이지와 동일하게, Log 테이블 변경을 폴링 없이 즉시 반영 (15초 폴링은 안전망으로 유지).
+  subscribeToSeatChanges(() => loadStats());
+}
+
+/* ===================== 세션 유지 확인 =====================
+ * 파일 맨 아래에서 해야 한다 — unlock()이 이 시점 이전에 선언된 모든 const를 참조하는데,
+ * 이 체크가 파일 위쪽에 있으면 아직 초기화되지 않은 const에 접근하다 스크립트가 죽는다. */
+if (localStorage.getItem(AUTH_KEY) === "1") {
+  unlock();
+} else {
+  passwordInput.focus();
+}
