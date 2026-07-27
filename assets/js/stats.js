@@ -1,8 +1,8 @@
-import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726c";
-import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726c";
-import { renderTimeTabs } from "./time-tabs.js?v=20260726c";
-import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726c";
-import { initAppSwitcher } from "./app-switcher.js?v=20260726c";
+import { TIMES, REGISTRATION_TIME } from "./config.js?v=20260726d";
+import { apiGet, apiPost, subscribeToSeatChanges } from "./api.js?v=20260726d";
+import { renderTimeTabs } from "./time-tabs.js?v=20260726d";
+import { GRADE_GROUPS, getGradeGroup, abbreviateClass } from "./grades.js?v=20260726d";
+import { initAppSwitcher } from "./app-switcher.js?v=20260726d";
 
 initAppSwitcher();
 
@@ -50,12 +50,12 @@ const MESSAGE_ICON_SVG =
 const ALL_SUMMARY = "__ALL__";
 let activeTimes = TIMES; // Control Panel이 관리하는 활성 타임 목록 — 로드 전까지는 전체를 그대로 노출
 
-/** "등록" 타임은 "출석"이 아니라 "등록"으로 부른다 — 버튼/배지/토스트 문구 전부 이 함수를 거친다. */
+/** "첫 날 접수" 타임은 "출석"이 아니라 "접수"로 부른다 — 버튼/배지/토스트 문구 전부 이 함수를 거친다. */
 function actionWord(time) {
-  return time === REGISTRATION_TIME ? "등록" : "출석";
+  return time === REGISTRATION_TIME ? "접수" : "출석";
 }
 function noActionWord(time) {
-  return time === REGISTRATION_TIME ? "미등록" : "미출석";
+  return time === REGISTRATION_TIME ? "미접수" : "미출석";
 }
 
 let currentTime = TIMES[0];
